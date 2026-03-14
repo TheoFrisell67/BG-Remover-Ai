@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BG Remoover Pro</title>
+    <title>BG Remoover</title>
     
-    <!-- Favicon -->
+    <!-- CUSTOM FAVICON -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z%22/></svg>">
 
-    <!-- Fonts -->
+    <!-- GOOGLE FONTS: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,14 +21,23 @@
                 extend: {
                     fontFamily: {
                         sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'monospace'],
                     },
                     colors: {
-                        slate: { 850: '#151e2e', 900: '#0f172a', 950: '#020617' },
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        indigo: {
+                            450: '#6366f1',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                        }
                     },
                     animation: {
                         'blob': 'blob 7s infinite',
                         'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'gradient-x': 'gradient-x 3s ease infinite',
                     },
                     keyframes: {
                         blob: {
@@ -36,97 +45,107 @@
                             '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
                             '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
                             '100%': { transform: 'translate(0px, 0px) scale(1)' },
-                        }
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: .5 },
+                        },
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            },
+                        },
                     }
                 }
             }
         }
     </script>
 
-    <!-- React & Babel -->
+    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
+        /* Custom Grid Background Pattern */
         .bg-grid-pattern {
             background-size: 40px 40px;
             background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                               linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         }
-        /* Checkerboard pattern for transparency */
-        .bg-checkerboard {
-            background-color: #1e293b;
-            background-image: linear-gradient(45deg, #0f172a 25%, transparent 25%), 
-                              linear-gradient(-45deg, #0f172a 25%, transparent 25%), 
-                              linear-gradient(45deg, transparent 75%, #0f172a 75%), 
-                              linear-gradient(-45deg, transparent 75%, #0f172a 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
         }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased overflow-x-hidden selection:bg-indigo-500/30 selection:text-white">
 
-    <!-- Background -->
+    <!-- Background Layers -->
     <div className="fixed inset-0 z-0 pointer-events-none">
+        <!-- Grid Pattern -->
         <div className="absolute inset-0 bg-grid-pattern"></div>
+        <!-- Ambient Blobs -->
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-600/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-4000"></div>
     </div>
 
-    <div id="root" className="relative z-10 min-h-screen flex flex-col"></div>
+    <div id="root" className="relative z-10"></div>
 
     <script type="text/babel" data-type="module">
-        // Icons
+        // Import Icons from ESM
         import { 
-            Upload, Download, X, RefreshCw, Shield, Lock, BarChart3, 
-            Activity, Settings, Trash2, Terminal, Globe, Monitor, Cpu, 
-            Sparkles, Image as ImageIcon 
+            Upload, 
+            Download, 
+            Sparkles, 
+            X, 
+            Image as ImageIcon,
+            RefreshCw,
+            Check
         } from 'https://esm.sh/lucide-react@0.344.0';
 
-        const { useState, useEffect, useCallback, useRef, useMemo } = React;
+        const { useState, useEffect, useCallback, useRef } = React;
 
-        // --- UTILS ---
-        const ANALYTICS_KEY = 'bg_remover_analytics_v2';
-        const LOGS_KEY = 'bg_remover_logs_v2';
+        // --- GLOBAL CACHE FOR SPEED ---
+        let cachedRemoveBackground = null;
+        let isLibraryLoading = false;
 
-        const getAnalytics = () => {
-            try {
-                const data = localStorage.getItem(ANALYTICS_KEY);
-                return data ? JSON.parse(data) : { visits: 0, uploads: 0, downloads: 0 };
-            } catch (e) { return { visits: 0, uploads: 0, downloads: 0 }; }
-        };
+        // --- Components ---
 
-        const updateAnalytics = (type) => {
-            const current = getAnalytics();
-            if (current[type] !== undefined) {
-                current[type]++;
-                localStorage.setItem(ANALYTICS_KEY, JSON.stringify(current));
-            }
-            return current;
-        };
-
-        const addLog = (action, details) => {
-            try {
-                const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
-                logs.unshift({ id: Date.now(), time: new Date().toISOString(), action, details });
-                if (logs.length > 50) logs.pop();
-                localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
-            } catch (e) {}
-        };
-
-        // --- COMPONENTS ---
         const Button = ({ children, onClick, variant = "primary", className = "", disabled = false, type = "button" }) => {
-            const baseStyles = "inline-flex items-center justify-center rounded-full font-semibold transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:pointer-events-none";
+            const baseStyles = "inline-flex items-center justify-center rounded-full font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-50 disabled:pointer-events-none";
+            
             const variants = {
-                primary: "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5",
-                outline: "border border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 hover:text-white",
+                primary: "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5 active:translate-y-0",
+                outline: "border border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-500 hover:shadow-lg hover:shadow-black/20",
                 ghost: "text-slate-400 hover:text-white hover:bg-slate-800/50",
-                danger: "bg-red-600/10 border border-red-600/20 text-red-400 hover:bg-red-600/20",
             };
+
             return (
-                <button type={type} onClick={onClick} disabled={disabled} className={`${baseStyles} ${variants[variant]} ${className} px-6 py-3`}>
+                <button 
+                    type={type}
+                    onClick={onClick} 
+                    disabled={disabled}
+                    className={`${baseStyles} ${variants[variant]} ${className} px-8 py-3`}
+                >
                     {children}
                 </button>
             );
@@ -138,350 +157,464 @@
             </div>
         );
 
-        // --- ADMIN PANEL ---
-        const AdminPanel = ({ onClose }) => {
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [password, setPassword] = useState('');
-            const [error, setError] = useState('');
-            const [activeTab, setActiveTab] = useState('dashboard');
-            const [logs, setLogs] = useState([]);
-            const analytics = useMemo(getAnalytics, []);
+        const ImageUploader = ({ onImageSelect }) => {
+            const [isDragging, setIsDragging] = useState(false);
+            const fileInputRef = useRef(null);
 
-            useEffect(() => {
-                if (isLoggedIn) setLogs(JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'));
-            }, [isLoggedIn]);
-
-            const handleLogin = (e) => {
+            const handleDrag = (e) => {
                 e.preventDefault();
-                if (password === 'Hundkatt') {
-                    setIsLoggedIn(true);
-                    addLog('Admin Login', 'Success');
-                } else {
-                    setError('Incorrect Password');
-                    setPassword('');
+                e.stopPropagation();
+                if (e.type === 'dragenter' || e.type === 'dragover') {
+                    setIsDragging(true);
+                } else if (e.type === 'dragleave') {
+                    setIsDragging(false);
                 }
             };
 
-            if (!isLoggedIn) {
-                return (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md animate-in fade-in">
-                        <Card className="w-full max-w-sm p-8 border-t-4 border-t-indigo-500">
-                            <div className="flex flex-col items-center text-center space-y-6">
-                                <div className="p-3 bg-indigo-500/10 rounded-full">
-                                    <Lock className="w-8 h-8 text-indigo-400" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-white">Restricted Access</h2>
-                                <form onSubmit={handleLogin} className="w-full space-y-4">
-                                    <input 
-                                        type="password" 
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Enter Password"
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-indigo-500 focus:outline-none transition-colors"
-                                        autoFocus
-                                    />
-                                    {error && <p className="text-red-400 text-sm">{error}</p>}
-                                    <Button type="submit" className="w-full">Unlock</Button>
-                                </form>
-                                <button onClick={onClose} className="text-slate-500 text-sm hover:text-white transition-colors">Cancel</button>
-                            </div>
-                        </Card>
-                    </div>
-                );
-            }
+            const handleDrop = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    processFile(files[0]);
+                }
+            };
+
+            const handleFileInput = (e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                    processFile(files[0]);
+                }
+            };
+
+            const processFile = (file) => {
+                if (!file.type.match('image.*')) {
+                    alert('Please select an image file');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    onImageSelect(file, e.target.result);
+                };
+                reader.readAsDataURL(file);
+            };
 
             return (
-                <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col md:flex-row animate-in fade-in zoom-in-95">
-                    <div className="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-6 flex flex-col">
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center"><Shield className="w-6 h-6 text-white" /></div>
-                            <h2 className="font-bold text-white">Admin</h2>
-                        </div>
-                        <nav className="space-y-2 flex-1">
-                            {['dashboard', 'logs', 'settings'].map((tab) => (
-                                <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl capitalize ${activeTab === tab ? 'bg-indigo-600/20 text-indigo-400' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
-                                    {tab === 'dashboard' && <BarChart3 className="w-5 h-5" />}
-                                    {tab === 'logs' && <Terminal className="w-5 h-5" />}
-                                    {tab === 'settings' && <Settings className="w-5 h-5" />}
-                                    {tab}
-                                </button>
-                            ))}
-                        </nav>
-                        <Button onClick={onClose} variant="ghost" className="w-full justify-start">Close Panel</Button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-8">
-                        <h1 className="text-3xl font-bold text-white mb-8 capitalize">{activeTab}</h1>
-                        {activeTab === 'dashboard' && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <Card className="p-6"><p className="text-slate-400 text-sm">Visits</p><h3 className="text-3xl font-bold text-white mt-2">{analytics.visits}</h3></Card>
-                                <Card className="p-6"><p className="text-slate-400 text-sm">Uploads</p><h3 className="text-3xl font-bold text-white mt-2">{analytics.uploads}</h3></Card>
-                                <Card className="p-6"><p className="text-slate-400 text-sm">Downloads</p><h3 className="text-3xl font-bold text-white mt-2">{analytics.downloads}</h3></Card>
+                <div 
+                    className={`group relative border-2 border-dashed rounded-[2rem] p-20 text-center transition-all duration-500 cursor-pointer overflow-hidden
+                        ${isDragging 
+                            ? 'border-indigo-500 bg-indigo-500/5 scale-[1.01] shadow-[0_0_50px_-10px_rgba(99,102,241,0.3)]' 
+                            : 'border-slate-700 hover:border-indigo-400 hover:bg-slate-800/20 hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.15)]'}`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current.click()}
+                >
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/png, image/jpeg, image/webp"
+                        onChange={handleFileInput}
+                    />
+                    
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+
+                    <div className="relative z-10 flex flex-col items-center gap-8">
+                        {/* IMPROVED ICON */}
+                        <div className="relative group-hover:scale-110 transition-transform duration-500">
+                            {/* Glow Effect */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+                            
+                            {/* Icon Container */}
+                            <div className={`relative bg-slate-900 border-2 transition-all duration-500 rounded-full p-6 shadow-xl
+                                ${isDragging 
+                                    ? 'border-indigo-400 scale-110 rotate-3' 
+                                    : 'border-slate-700 group-hover:border-indigo-500/50'}`}>
+                                <Upload className={`w-10 h-10 transition-colors duration-300 ${isDragging ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400'}`} />
                             </div>
-                        )}
-                        {activeTab === 'logs' && (
-                            <Card className="overflow-hidden">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-slate-950/50 text-slate-400"><tr><th className="p-4">Time</th><th className="p-4">Action</th><th className="p-4">Details</th></tr></thead>
-                                    <tbody className="divide-y divide-slate-800">
-                                        {logs.map(l => (
-                                            <tr key={l.id} className="hover:bg-slate-800/30">
-                                                <td className="p-4 font-mono text-xs text-slate-500">{new Date(l.time).toLocaleTimeString()}</td>
-                                                <td className="p-4 text-white">{l.action}</td>
-                                                <td className="p-4 text-slate-400">{l.details}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </Card>
-                        )}
-                        {activeTab === 'settings' && (
-                            <Card className="p-6">
-                                <Button variant="danger" onClick={() => { localStorage.clear(); window.location.reload(); }}>Reset All Data</Button>
-                            </Card>
-                        )}
+                        </div>
+
+                        <div className="space-y-3">
+                            <h3 className="text-3xl font-bold text-white tracking-tight">
+                                Upload Image
+                            </h3>
+                            <p className="text-slate-400 font-medium">
+                                or drag and drop here
+                            </p>
+                        </div>
                     </div>
                 </div>
             );
         };
 
-        // --- MAIN APP ---
+        const ImageProcessor = ({ imagePreview, onComplete, onError, onProgress }) => {
+            useEffect(() => {
+                const processImage = async () => {
+                    try {
+                        const response = await fetch(imagePreview);
+                        const blob = await response.blob();
+                        
+                        if (cachedRemoveBackground) {
+                            console.log("Using cached AI model (Fast!)");
+                            const resultBlob = await cachedRemoveBackground(blob, {
+                                progress: (key, current, total) => {
+                                    const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+                                    onProgress(percent);
+                                },
+                                debug: false,
+                                proxyToWorker: true,
+                                model: 'medium',
+                            });
+                            finishProcessing(resultBlob);
+                            return;
+                        }
+
+                        if (!isLibraryLoading) {
+                            isLibraryLoading = true;
+                            onProgress(1); 
+
+                            const moduleUrl = `https://esm.sh/@imgly/background-removal@1.4.5`;
+                            const { removeBackground } = await import(moduleUrl);
+                            
+                            cachedRemoveBackground = removeBackground;
+                            isLibraryLoading = false;
+
+                            console.log("AI Model Loaded & Cached");
+                            
+                            const resultBlob = await removeBackground(blob, {
+                                progress: (key, current, total) => {
+                                    const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+                                    onProgress(percent);
+                                },
+                                debug: false,
+                                proxyToWorker: true,
+                                model: 'medium',
+                            });
+                            finishProcessing(resultBlob);
+                        }
+
+                    } catch (error) {
+                        console.error("AI Processing failed:", error);
+                        let errorMsg = "Failed to process image.";
+                        if (error.message) errorMsg += ` ${error.message}`;
+                        onError(errorMsg);
+                    }
+                };
+
+                const finishProcessing = async (resultBlob) => {
+                    const resultBitmap = await createImageBitmap(resultBlob);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = resultBitmap.width;
+                    canvas.height = resultBitmap.height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    if (ctx) {
+                        ctx.drawImage(resultBitmap, 0, 0);
+                        onComplete(canvas);
+                    } else {
+                        throw new Error("Failed to get canvas context");
+                    }
+                };
+
+                processImage();
+            }, [imagePreview, onComplete, onError, onProgress]);
+
+            return null;
+        };
+
+        const DownloadButton = ({ canvas, filename, bgColor }) => {
+            const handleDownload = () => {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const ctx = tempCanvas.getContext('2d');
+
+                if (bgColor !== 'transparent') {
+                    ctx.fillStyle = bgColor;
+                    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                }
+
+                ctx.drawImage(canvas, 0, 0);
+
+                const link = document.createElement('a');
+                link.download = `${filename}-transparent.png`;
+                link.href = tempCanvas.toDataURL('image/png');
+                link.click();
+            };
+
+            return (
+                <Button onClick={handleDownload} variant="primary" className="gap-2 text-sm shadow-indigo-500/40">
+                    <Download className="w-4 h-4" />
+                    Download PNG
+                </Button>
+            );
+        };
+
+        // --- Main App ---
+
         const App = () => {
             const [imagePreview, setImagePreview] = useState(null);
             const [processedCanvas, setProcessedCanvas] = useState(null);
             const [isProcessing, setIsProcessing] = useState(false);
             const [error, setError] = useState(null);
             const [fileName, setFileName] = useState("image");
-            const [progress, setProgress] = useState(0);
-            const [showAdmin, setShowAdmin] = useState(false);
+            
+            // SPLIT PROGRESS: Real (from AI) vs Visual (for UI)
+            const [realProgress, setRealProgress] = useState(0);
+            const [visualProgress, setVisualProgress] = useState(0);
+            
+            const [bgColor, setBgColor] = useState('transparent');
 
-            // --- ROUTING LOGIC (CRITICAL) ---
+            // SMOOTH PROGRESS LOGIC
             useEffect(() => {
-                console.log("Checking route:", window.location.pathname);
-                
-                const checkRoute = () => {
-                    const path = window.location.pathname;
-                    if (path === '/admin') {
-                        console.log("Admin route detected. Opening panel.");
-                        setShowAdmin(true);
-                    } else {
-                        setShowAdmin(false);
-                    }
-                };
-
-                checkRoute();
-                window.addEventListener('popstate', checkRoute);
-                return () => window.removeEventListener('popstate', checkRoute);
-            }, []);
-
-            const openAdmin = () => {
-                window.history.pushState({}, '', '/admin');
-                setShowAdmin(true);
-            };
-
-            const closeAdmin = () => {
-                window.history.pushState({}, '', '/');
-                setShowAdmin(false);
-            };
-
-            useEffect(() => {
-                updateAnalytics('visits');
-                addLog('Visit', 'User landed on page');
-            }, []);
-
-            const handleDrop = (e) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files[0];
-                if (file && file.type.startsWith('image/')) processFile(file);
-            };
-
-            const handleFileInput = (e) => {
-                const file = e.target.files[0];
-                if (file) processFile(file);
-            };
-
-            const processFile = (file) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    setFileName(file.name.split('.')[0]);
-                    setImagePreview(e.target.result);
-                    setProcessedCanvas(null);
-                    setIsProcessing(true);
-                    setError(null);
-                    setProgress(0);
-                    addLog('Upload', file.name);
-                    updateAnalytics('uploads');
-                };
-                reader.readAsDataURL(file);
-            };
-
-            // AI PROCESSING
-            useEffect(() => {
-                if (!imagePreview || !isProcessing) return;
-
-                let removeBgFn = null;
-
-                const runAI = async () => {
-                    try {
-                        // Dynamic import for speed
-                        const module = await import('https://esm.sh/@imgly/background-removal@1.4.5');
-                        removeBgFn = module.removeBackground;
-
-                        const response = await fetch(imagePreview);
-                        const blob = await response.blob();
-
-                        const result = await removeBgFn(blob, {
-                            progress: (k, c, t) => {
-                                const p = Math.round((c / t) * 100);
-                                setProgress(p);
-                            },
-                            debug: false,
-                            proxyToWorker: true,
-                            model: 'medium', // 'small' is faster, 'medium' is better quality
+                if (visualProgress < realProgress) {
+                    const timer = setInterval(() => {
+                        setVisualProgress(prev => {
+                            if (prev < realProgress) {
+                                return Math.min(prev + 1, realProgress);
+                            }
+                            return prev;
                         });
+                    }, 10); 
+                    return () => clearInterval(timer);
+                }
+            }, [realProgress, visualProgress]);
 
-                        const bitmap = await createImageBitmap(result);
-                        const canvas = document.createElement('canvas');
-                        canvas.width = bitmap.width;
-                        canvas.height = bitmap.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(bitmap, 0, 0);
-                        
-                        setProcessedCanvas(canvas);
-                        setIsProcessing(false);
-                        addLog('Success', 'Background removed');
-                    } catch (err) {
-                        console.error(err);
-                        setError("AI Processing failed. Try a smaller image.");
-                        setIsProcessing(false);
-                        addLog('Error', err.message);
-                    }
-                };
+            const handleImageSelect = useCallback((file, preview) => {
+                const name = file.name.split('.').slice(0, -1).join('.');
+                setFileName(name);
+                setImagePreview(preview);
+                setProcessedCanvas(null);
+                setIsProcessing(true);
+                setError(null);
+                setRealProgress(0);
+                setVisualProgress(0);
+            }, []);
 
-                runAI();
-            }, [imagePreview, isProcessing]);
+            const handleProcessingComplete = useCallback((canvas) => {
+                setProcessedCanvas(canvas);
+                setRealProgress(100);
+                setTimeout(() => {
+                    setIsProcessing(false);
+                }, 800); 
+            }, []);
 
-            const handleDownload = () => {
-                if (!processedCanvas) return;
-                const link = document.createElement('a');
-                link.download = `${fileName}-transparent.png`;
-                link.href = processedCanvas.toDataURL('image/png');
-                link.click();
-                updateAnalytics('downloads');
-                addLog('Download', fileName);
+            const handleError = useCallback((message) => {
+                setError(message);
+                setIsProcessing(false);
+            }, []);
+
+            const resetApp = () => {
+                setImagePreview(null);
+                setProcessedCanvas(null);
+                setError(null);
+                setRealProgress(0);
+                setVisualProgress(0);
             };
+
+            const colors = [
+                { name: 'Transparent', val: 'transparent' },
+                { name: 'White', val: '#ffffff' },
+                { name: 'Black', val: '#000000' },
+                { name: 'Gray', val: '#6b7280' },
+                { name: 'Red', val: '#ef4444' },
+                { name: 'Orange', val: '#f97316' },
+                { name: 'Yellow', val: '#eab308' },
+                { name: 'Green', val: '#22c55e' },
+                { name: 'Blue', val: '#3b82f6' },
+                { name: 'Indigo', val: '#4f46e5' },
+                { name: 'Purple', val: '#a855f7' },
+                { name: 'Pink', val: '#ec4899' },
+            ];
 
             return (
-                <>
-                    {showAdmin && <AdminPanel onClose={closeAdmin} />}
-
-                    <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 max-w-7xl mx-auto w-full">
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 md:p-12">
+                    <div className="w-full max-w-6xl mx-auto space-y-16">
+                        
                         {/* Header */}
-                        <header className="text-center mb-12 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-4">
-                                <Sparkles className="w-4 h-4" />
-                                AI-Powered Precision
-                            </div>
-                            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white">
-                                RemoveBG <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Pro</span>
+                        <header className="text-center space-y-6 animate-in fade-in slide-in-from-top-4 duration-700">
+                            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
+                               {/* Main Gradient Text */}
+                               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-gradient-x">BG Rem</span>
+                               {/* The "Cool" 'oo' - Holographic Shimmer Effect */}
+                               <span className="relative inline-block mx-1">
+                                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 animate-gradient-x drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]">oo</span>
+                                   <span className="absolute -inset-2 bg-cyan-500/20 blur-xl rounded-full -z-10 animate-pulse"></span>
+                               </span>
+                               {/* Rest of the word */}
+                               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-gradient-x">ver</span>
                             </h1>
-                            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                                Instantly remove backgrounds from any image. 100% free, private, and runs entirely in your browser.
+                            <p className="text-xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+                                Instant, AI-powered background removal. <br className="hidden md:block"/>
+                                100% free, private, and runs entirely in your browser.
                             </p>
                         </header>
 
-                        {/* Main Interface */}
-                        <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-                            {!imagePreview ? (
-                                <Card 
-                                    className="p-12 md:p-20 border-2 border-dashed border-slate-700 hover:border-indigo-500 transition-colors cursor-pointer group relative overflow-hidden"
-                                    onDragOver={(e) => e.preventDefault()}
-                                    onDrop={handleDrop}
-                                    onClick={() => document.getElementById('fileInput').click()}
-                                >
-                                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <div className="relative z-10 flex flex-col items-center gap-6 text-center">
-                                        <div className="p-6 bg-slate-900 rounded-2xl border border-slate-700 group-hover:scale-110 transition-transform duration-300 shadow-xl">
-                                            <Upload className="w-12 h-12 text-indigo-400" />
+                        {/* Error Display */}
+                        {error && (
+                            <Card className="border-red-900/50 bg-red-950/40 animate-in zoom-in-95 duration-200">
+                                <div className="p-6">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-2 bg-red-500/20 rounded-xl shrink-0">
+                                            <X className="w-5 h-5 text-red-400" />
                                         </div>
                                         <div>
-                                            <h3 className="text-2xl font-bold text-white">Upload an Image</h3>
-                                            <p className="text-slate-400 mt-2">Drag & drop or click to browse</p>
-                                            <p className="text-slate-600 text-sm mt-4">Supports JPG, PNG, WEBP</p>
+                                            <h3 className="font-semibold text-red-200 mb-1">Processing Failed</h3>
+                                            <p className="text-sm text-red-300/80">{error}</p>
                                         </div>
                                     </div>
-                                    <input id="fileInput" type="file" className="hidden" accept="image/*" onChange={handleFileInput} />
-                                </Card>
-                            ) : (
-                                <Card className="p-6 md:p-8">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                            <ImageIcon className="w-5 h-5 text-indigo-400" />
-                                            {fileName}
+                                </div>
+                            </Card>
+                        )}
+
+                        {/* Main Content Area */}
+                        {!imagePreview && !isProcessing && (
+                            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                                <ImageUploader onImageSelect={handleImageSelect} />
+                            </div>
+                        )}
+
+                        {/* Processing State */}
+                        {isProcessing && (
+                            <Card className="max-w-2xl mx-auto overflow-hidden animate-in zoom-in-95 duration-300 border-slate-800">
+                                <div className="p-20 text-center space-y-10">
+                                    <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
+                                        {/* Outer Glow Ring */}
+                                        <div className="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                                        <div className="absolute inset-0 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin shadow-[0_0_30px_rgba(99,102,241,0.3)]"></div>
+                                        
+                                        {/* Inner Content */}
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-5xl font-bold text-white z-10 tabular-nums tracking-tighter">
+                                                {visualProgress}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                        <h3 className="text-2xl font-bold text-white">
+                                            {visualProgress === 100 ? "Complete!" : "Processing Image..."}
                                         </h3>
-                                        <button onClick={() => { setImagePreview(null); setProcessedCanvas(null); }} className="text-slate-400 hover:text-red-400 transition-colors">
-                                            <X className="w-6 h-6" />
-                                        </button>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                        {/* Original */}
-                                        <div className="space-y-2">
-                                            <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Original</p>
-                                            <div className="aspect-video bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
-                                                <img src={imagePreview} alt="Original" className="max-w-full max-h-full object-contain" />
-                                            </div>
+                                        <p className="text-slate-400 max-w-md mx-auto">
+                                            {visualProgress === 100 
+                                                ? "Almost there..." 
+                                                : "Analyzing pixels and removing background..."}
+                                        </p>
+                                        {/* Progress Bar with fast transition */}
+                                        <div className="w-full bg-slate-800 rounded-full h-3 mt-6 overflow-hidden shadow-inner">
+                                            <div 
+                                                className="bg-gradient-to-r from-indigo-600 to-purple-600 h-3 rounded-full transition-all duration-75 ease-out shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
+                                                style={{ width: `${Math.max(visualProgress, 1)}%` }}
+                                            ></div>
                                         </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
 
-                                        {/* Processed */}
-                                        <div className="space-y-2">
-                                            <p className="text-sm font-medium text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                        {/* Results */}
+                        {imagePreview && !isProcessing && (
+                            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    {/* Original */}
+                                    <Card className="overflow-hidden flex flex-col group hover:border-slate-700 transition-colors duration-300">
+                                        <div className="p-5 border-b border-slate-800/50 bg-slate-900/40 flex items-center justify-between">
+                                            <h3 className="font-semibold text-slate-300 flex items-center gap-2">
+                                                <ImageIcon className="w-4 h-4 text-slate-500" />
+                                                Original
+                                            </h3>
+                                        </div>
+                                        <div className="p-8 flex-1 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2nk5eamZAIK0onmDx38GqGjYdQ/3NgYGD4Lw58xZgYGJ68+fP//348eP//z58+//CAMRAf1w2l0OAAAAAElFTkSuQmCC')] bg-repeat min-h-[400px] flex items-center justify-center">
+                                            <img 
+                                                src={imagePreview} 
+                                                alt="Original" 
+                                                className="max-w-full h-auto rounded-2xl shadow-2xl"
+                                            />
+                                        </div>
+                                    </Card>
+
+                                    {/* Processed */}
+                                    <Card className="overflow-hidden flex flex-col group relative border-indigo-500/30 shadow-indigo-500/5">
+                                        <div className="absolute top-0 right-0 p-5 z-20">
+                                            {processedCanvas && (
+                                                <DownloadButton canvas={processedCanvas} filename={fileName} bgColor={bgColor} />
+                                            )}
+                                        </div>
+                                        <div className="p-5 border-b border-slate-800/50 bg-slate-900/40 flex items-center justify-between">
+                                            <h3 className="font-semibold text-indigo-400 flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4 text-indigo-500" />
                                                 Result
-                                                {isProcessing && <span className="text-indigo-400 text-xs animate-pulse">Processing... {progress}%</span>}
-                                            </p>
-                                            <div className="aspect-video bg-checkerboard rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center relative">
-                                                {isProcessing && (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm z-10">
-                                                        <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin" />
-                                                    </div>
-                                                )}
-                                                {error && (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-950/90 z-10 text-center p-4">
-                                                        <p className="text-red-400">{error}</p>
-                                                    </div>
-                                                )}
-                                                {processedCanvas ? (
-                                                    <img src={processedCanvas.toDataURL()} alt="Processed" className="max-w-full max-h-full object-contain" />
-                                                ) : (
-                                                    <div className="text-slate-600 text-sm">Waiting for AI...</div>
-                                                )}
-                                            </div>
+                                            </h3>
                                         </div>
-                                    </div>
+                                        
+                                        {/* Color Picker */}
+                                        <div className="px-6 py-5 flex items-center justify-center gap-3 flex-wrap border-b border-slate-800/50 bg-slate-900/40 z-10">
+                                            <span className="text-xs text-slate-500 uppercase font-bold tracking-widest w-full text-center mb-3">Background Color</span>
+                                            {colors.map((c) => (
+                                                <button
+                                                    key={c.val}
+                                                    onClick={() => setBgColor(c.val)}
+                                                    title={c.name}
+                                                    className={`w-10 h-10 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center text-xs shadow-md
+                                                        ${bgColor === c.val 
+                                                            ? 'border-white ring-2 ring-indigo-500/50 scale-110' 
+                                                            : 'border-slate-600 hover:border-slate-400'}`}
+                                                    style={{ 
+                                                        backgroundColor: c.val === 'transparent' 
+                                                            ? 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 10px 10px' 
+                                                            : c.val 
+                                                    }}
+                                                >
+                                                    {bgColor === c.val && c.val !== 'transparent' && <Check className="w-4 h-4 text-white drop-shadow-md" />}
+                                                    {c.val === 'transparent' && bgColor === 'transparent' && <span className="text-slate-400 font-bold text-[10px]">/</span>}
+                                                </button>
+                                            ))}
+                                        </div>
 
-                                    <div className="flex justify-center">
-                                        <Button 
-                                            onClick={handleDownload} 
-                                            disabled={!processedCanvas || isProcessing}
-                                            className="w-full md:w-auto px-12 text-lg h-14"
+                                        <div 
+                                            className="p-8 flex-1 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2nk5eamZAIK0onmDx38GqGjYdQ/3NgYGD4Lw58xZgYGJ68+fP//348eP//z58+//CAMRAf1w2l0OAAAAAElFTkSuQmCC')] bg-repeat min-h-[400px] flex items-center justify-center relative"
+                                            style={{ backgroundColor: bgColor }}
                                         >
-                                            <Download className="w-5 h-5 mr-2" />
-                                            Download Transparent PNG
-                                        </Button>
-                                    </div>
-                                </Card>
-                            )}
-                        </div>
+                                            {processedCanvas ? (
+                                                <img 
+                                                    src={processedCanvas.toDataURL('image/png')} 
+                                                    alt="Processed" 
+                                                    className="max-w-full h-auto rounded-2xl shadow-2xl relative z-10"
+                                                />
+                                            ) : (
+                                                <div className="text-center text-slate-500">
+                                                    <X className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                                                    <p>Processing failed</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </Card>
+                                </div>
 
-                        {/* Footer */}
-                        <footer className="mt-16 text-center text-slate-600 text-sm animate-in fade-in duration-1000 delay-300">
-                            <p>© 2024 BG Remoover Pro. All processing happens locally.</p>
-                            {/* Hidden Admin Trigger for Debugging */}
-                            <button onClick={openAdmin} className="opacity-0 hover:opacity-100 transition-opacity mt-2 text-xs text-slate-800">
-                                Admin
-                            </button>
-                        </footer>
-                    </main>
-                </>
+                                <div className="flex justify-center pt-4">
+                                    <Button onClick={resetApp} variant="outline" className="gap-2 px-10">
+                                        <RefreshCw className="w-4 h-4" />
+                                        Process Another Image
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Hidden Processor */}
+                        {imagePreview && isProcessing && (
+                            <ImageProcessor 
+                                imagePreview={imagePreview} 
+                                onComplete={handleProcessingComplete}
+                                onError={handleError}
+                                onProgress={setRealProgress}
+                            />
+                        )}
+                    </div>
+                </div>
             );
         };
 
