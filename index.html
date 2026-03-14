@@ -251,12 +251,11 @@
                             console.log("Using cached AI model (Fast!)");
                             const resultBlob = await cachedRemoveBackground(blob, {
                                 progress: (key, current, total) => {
-                                    // Safe math to prevent NaN/Infinity glitches
                                     const percent = total > 0 ? Math.round((current / total) * 100) : 0;
                                     onProgress(percent);
                                 },
                                 debug: false,
-                                proxyToWorker: true, // TRUE: Runs in background thread (UI won't freeze)
+                                proxyToWorker: true,
                                 model: 'medium',
                             });
                             finishProcessing(resultBlob);
@@ -265,7 +264,7 @@
 
                         if (!isLibraryLoading) {
                             isLibraryLoading = true;
-                            onProgress(1); // Start at 1% immediately to show activity
+                            onProgress(1); 
 
                             const moduleUrl = `https://esm.sh/@imgly/background-removal@1.4.5`;
                             const { removeBackground } = await import(moduleUrl);
@@ -281,7 +280,7 @@
                                     onProgress(percent);
                                 },
                                 debug: false,
-                                proxyToWorker: true, // TRUE: Runs in background thread
+                                proxyToWorker: true,
                                 model: 'medium',
                             });
                             finishProcessing(resultBlob);
@@ -352,8 +351,28 @@
             const [isProcessing, setIsProcessing] = useState(false);
             const [error, setError] = useState(null);
             const [fileName, setFileName] = useState("image");
-            const [progress, setProgress] = useState(0);
+            
+            // SPLIT PROGRESS: Real (from AI) vs Visual (for UI)
+            const [realProgress, setRealProgress] = useState(0);
+            const [visualProgress, setVisualProgress] = useState(0);
+            
             const [bgColor, setBgColor] = useState('transparent');
+
+            // SMOOTH PROGRESS LOGIC
+            // This effect ensures the bar counts up smoothly (1, 2, 3...) instead of jumping (0 -> 100)
+            useEffect(() => {
+                if (visualProgress < realProgress) {
+                    const timer = setInterval(() => {
+                        setVisualProgress(prev => {
+                            if (prev < realProgress) {
+                                return Math.min(prev + 1, realProgress);
+                            }
+                            return prev;
+                        });
+                    }, 10); // Updates every 10ms for smoothness
+                    return () => clearInterval(timer);
+                }
+            }, [realProgress, visualProgress]);
 
             const handleImageSelect = useCallback((file, preview) => {
                 const name = file.name.split('.').slice(0, -1).join('.');
@@ -362,12 +381,14 @@
                 setProcessedCanvas(null);
                 setIsProcessing(true);
                 setError(null);
-                setProgress(0);
+                setRealProgress(0);
+                setVisualProgress(0);
             }, []);
 
             const handleProcessingComplete = useCallback((canvas) => {
                 setProcessedCanvas(canvas);
-                setProgress(100); 
+                setRealProgress(100);
+                // Visual progress will catch up to 100 via the effect above
                 setTimeout(() => {
                     setIsProcessing(false);
                 }, 800); 
@@ -382,7 +403,8 @@
                 setImagePreview(null);
                 setProcessedCanvas(null);
                 setError(null);
-                setProgress(0);
+                setRealProgress(0);
+                setVisualProgress(0);
             };
 
             const colors = [
@@ -451,27 +473,26 @@
                                         {/* Inner Content */}
                                         <div className="flex flex-col items-center">
                                             <span className="text-5xl font-bold text-white z-10 tabular-nums tracking-tighter">
-                                                {progress}%
+                                                {visualProgress}%
                                             </span>
                                         </div>
                                     </div>
                                     
                                     <div className="space-y-4">
+                                        {/* UNIFIED TEXT: Removed "Loading AI Model" specific text */}
                                         <h3 className="text-2xl font-bold text-white">
-                                            {progress === 100 ? "Complete!" : (progress < 10 ? "Loading AI Model..." : "Processing Image...")}
+                                            {visualProgress === 100 ? "Complete!" : "Processing Image..."}
                                         </h3>
                                         <p className="text-slate-400 max-w-md mx-auto">
-                                            {progress === 100 
+                                            {visualProgress === 100 
                                                 ? "Almost there..." 
-                                                : (progress < 10 
-                                                    ? "Downloading high-precision neural network (first time only)..." 
-                                                    : "Analyzing pixels and removing background...")}
+                                                : "Analyzing pixels and removing background..."}
                                         </p>
-                                        {/* Progress Bar with faster transition (75ms) */}
+                                        {/* Progress Bar with fast transition */}
                                         <div className="w-full bg-slate-800 rounded-full h-3 mt-6 overflow-hidden shadow-inner">
                                             <div 
                                                 className="bg-gradient-to-r from-indigo-600 to-purple-600 h-3 rounded-full transition-all duration-75 ease-out shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
-                                                style={{ width: `${Math.max(progress, 1)}%` }}
+                                                style={{ width: `${Math.max(visualProgress, 1)}%` }}
                                             ></div>
                                         </div>
                                     </div>
@@ -573,7 +594,7 @@
                                 imagePreview={imagePreview} 
                                 onComplete={handleProcessingComplete}
                                 onError={handleError}
-                                onProgress={setProgress}
+                                onProgress={setRealProgress}
                             />
                         )}
                     </div>
