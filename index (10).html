@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BG Remover Ai</title>
+    
+    <!-- CUSTOM FAVICON (Sparkles Logo) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z%22/></svg>">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        indigo: {
+                            450: '#6366f1',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased overflow-x-hidden selection:bg-indigo-500/30">
+    <!-- Background Ambient Effects -->
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full mix-blend-screen filter blur-[128px] animate-blob"></div>
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-600/20 rounded-full mix-blend-screen filter blur-[128px] animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-600/20 rounded-full mix-blend-screen filter blur-[128px] animate-blob animation-delay-4000"></div>
+    </div>
+
+    <div id="root" className="relative z-10"></div>
+
+    <script type="text/babel" data-type="module">
+        // Import Icons from ESM
+        import { 
+            Upload, 
+            Download, 
+            Sparkles, 
+            X, 
+            Image as ImageIcon,
+            RefreshCw
+        } from 'https://esm.sh/lucide-react@0.344.0';
+
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        // --- GLOBAL CACHE FOR SPEED ---
+        let cachedRemoveBackground = null;
+        let isLibraryLoading = false;
+
+        // --- Components ---
+
+        const Button = ({ children, onClick, variant = "primary", className = "", disabled = false, type = "button" }) => {
+            const baseStyles = "inline-flex items-center justify-center rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-50 disabled:pointer-events-none";
+            
+            const variants = {
+                primary: "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5",
+                outline: "border border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-600",
+                ghost: "text-slate-400 hover:text-white hover:bg-slate-800/50",
+            };
+
+            return (
+                <button 
+                    type={type}
+                    onClick={onClick} 
+                    disabled={disabled}
+                    className={`${baseStyles} ${variants[variant]} ${className} px-6 py-3`}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-slate-900/60 border border-slate-800/50 backdrop-blur-xl rounded-2xl ${className}`}>
+                {children}
+            </div>
+        );
+
+        const ImageUploader = ({ onImageSelect }) => {
+            const [isDragging, setIsDragging] = useState(false);
+            const fileInputRef = useRef(null);
+
+            const handleDrag = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.type === 'dragenter' || e.type === 'dragover') {
+                    setIsDragging(true);
+                } else if (e.type === 'dragleave') {
+                    setIsDragging(false);
+                }
+            };
+
+            const handleDrop = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    processFile(files[0]);
+                }
+            };
+
+            const handleFileInput = (e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                    processFile(files[0]);
+                }
+            };
+
+            const processFile = (file) => {
+                if (!file.type.match('image.*')) {
+                    alert('Please select an image file');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    onImageSelect(file, e.target.result);
+                };
+                reader.readAsDataURL(file);
+            };
+
+            return (
+                <div 
+                    className={`group relative border-2 border-dashed rounded-3xl p-16 text-center transition-all duration-300 cursor-pointer overflow-hidden
+                        ${isDragging 
+                            ? 'border-indigo-500 bg-indigo-500/5 scale-[1.01]' 
+                            : 'border-slate-700 hover:border-indigo-500/50 hover:bg-slate-800/30'}`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current.click()}
+                >
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/png, image/jpeg, image/webp"
+                        onChange={handleFileInput}
+                    />
+                    
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+                    <div className="relative z-10 flex flex-col items-center gap-6">
+                        <div className={`p-5 rounded-2xl transition-all duration-300 ${isDragging ? 'bg-indigo-500/20 scale-110' : 'bg-slate-800 group-hover:bg-slate-700 group-hover:scale-105'}`}>
+                            <Upload className={`w-10 h-10 ${isDragging ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400'}`} />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-2xl font-bold text-white tracking-tight">
+                                Upload Your Image
+                            </h3>
+                            <p className="text-slate-400 text-sm">
+                                Drag & drop or click to browse
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ImageProcessor = ({ imagePreview, onComplete, onError, onProgress }) => {
+            useEffect(() => {
+                const processImage = async () => {
+                    try {
+                        const response = await fetch(imagePreview);
+                        const blob = await response.blob();
+                        
+                        // 1. Check Global Cache
+                        if (cachedRemoveBackground) {
+                            console.log("Using cached AI model (Fast!)");
+                            const resultBlob = await cachedRemoveBackground(blob, {
+                                progress: (key, current, total) => {
+                                    const percent = Math.round((current / total) * 100);
+                                    onProgress(percent);
+                                },
+                                debug: false,
+                                proxyToWorker: false,
+                                model: 'medium',
+                            });
+                            finishProcessing(resultBlob);
+                            return;
+                        }
+
+                        // 2. Load Library if needed
+                        if (!isLibraryLoading) {
+                            isLibraryLoading = true;
+                            onProgress(1); 
+
+                            const moduleUrl = `https://esm.sh/@imgly/background-removal@1.4.5`;
+                            const { removeBackground } = await import(moduleUrl);
+                            
+                            cachedRemoveBackground = removeBackground;
+                            isLibraryLoading = false;
+
+                            console.log("AI Model Loaded & Cached");
+                            
+                            const resultBlob = await removeBackground(blob, {
+                                progress: (key, current, total) => {
+                                    const percent = Math.round((current / total) * 100);
+                                    onProgress(percent);
+                                },
+                                debug: false,
+                                proxyToWorker: false,
+                                model: 'medium',
+                            });
+                            finishProcessing(resultBlob);
+                        }
+
+                    } catch (error) {
+                        console.error("AI Processing failed:", error);
+                        let errorMsg = "Failed to process image.";
+                        if (error.message) errorMsg += ` ${error.message}`;
+                        onError(errorMsg);
+                    }
+                };
+
+                const finishProcessing = async (resultBlob) => {
+                    const resultBitmap = await createImageBitmap(resultBlob);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = resultBitmap.width;
+                    canvas.height = resultBitmap.height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    if (ctx) {
+                        ctx.drawImage(resultBitmap, 0, 0);
+                        onComplete(canvas);
+                    } else {
+                        throw new Error("Failed to get canvas context");
+                    }
+                };
+
+                processImage();
+            }, [imagePreview, onComplete, onError, onProgress]);
+
+            return null;
+        };
+
+        const DownloadButton = ({ canvas, filename, bgColor }) => {
+            const handleDownload = () => {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const ctx = tempCanvas.getContext('2d');
+
+                if (bgColor !== 'transparent') {
+                    ctx.fillStyle = bgColor;
+                    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                }
+
+                ctx.drawImage(canvas, 0, 0);
+
+                const link = document.createElement('a');
+                link.download = `${filename}-transparent.png`;
+                link.href = tempCanvas.toDataURL('image/png');
+                link.click();
+            };
+
+            return (
+                <Button onClick={handleDownload} variant="primary" className="gap-2 text-sm">
+                    <Download className="w-4 h-4" />
+                    Download PNG
+                </Button>
+            );
+        };
+
+        // --- Main App ---
+
+        const App = () => {
+            const [imagePreview, setImagePreview] = useState(null);
+            const [processedCanvas, setProcessedCanvas] = useState(null);
+            const [isProcessing, setIsProcessing] = useState(false);
+            const [error, setError] = useState(null);
+            const [fileName, setFileName] = useState("image");
+            const [progress, setProgress] = useState(0);
+            const [bgColor, setBgColor] = useState('transparent');
+
+            const handleImageSelect = useCallback((file, preview) => {
+                const name = file.name.split('.').slice(0, -1).join('.');
+                setFileName(name);
+                setImagePreview(preview);
+                setProcessedCanvas(null);
+                setIsProcessing(true);
+                setError(null);
+                setProgress(0);
+            }, []);
+
+            const handleProcessingComplete = useCallback((canvas) => {
+                setProcessedCanvas(canvas);
+                setProgress(100); // Ensure it hits 100
+                
+                // FIX: Add a small delay so the user sees "100%" before the screen switches
+                setTimeout(() => {
+                    setIsProcessing(false);
+                }, 800); 
+            }, []);
+
+            const handleError = useCallback((message) => {
+                setError(message);
+                setIsProcessing(false);
+            }, []);
+
+            const resetApp = () => {
+                setImagePreview(null);
+                setProcessedCanvas(null);
+                setError(null);
+                setProgress(0);
+            };
+
+            // Expanded Color Palette
+            const colors = [
+                { name: 'Transparent', val: 'transparent' },
+                { name: 'White', val: '#ffffff' },
+                { name: 'Black', val: '#000000' },
+                { name: 'Gray', val: '#6b7280' },
+                { name: 'Red', val: '#ef4444' },
+                { name: 'Orange', val: '#f97316' },
+                { name: 'Yellow', val: '#eab308' },
+                { name: 'Green', val: '#22c55e' },
+                { name: 'Blue', val: '#3b82f6' },
+                { name: 'Indigo', val: '#4f46e5' },
+                { name: 'Purple', val: '#a855f7' },
+                { name: 'Pink', val: '#ec4899' },
+            ];
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 md:p-12">
+                    <div className="w-full max-w-5xl mx-auto space-y-12">
+                        
+                        {/* Header */}
+                        <header className="text-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                            {/* UPDATED LOGO: Matches Tab Logo exactly (White, Transparent) */}
+                            <div className="mb-4">
+                                <Sparkles className="w-8 h-8 text-white mx-auto" />
+                            </div>
+                            
+                            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white">
+                                BG Remover <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Ai</span>
+                            </h1>
+                            <p className="text-lg text-slate-400 max-w-lg mx-auto">
+                                Instant, AI-powered background removal. 100% free, private, and runs entirely in your browser.
+                            </p>
+                        </header>
+
+                        {/* Error Display */}
+                        {error && (
+                            <Card className="border-red-900/50 bg-red-950/40 animate-in zoom-in-95 duration-200">
+                                <div className="p-6">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-2 bg-red-500/20 rounded-lg shrink-0">
+                                            <X className="w-5 h-5 text-red-400" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-red-200 mb-1">Processing Failed</h3>
+                                            <p className="text-sm text-red-300/80">{error}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
+
+                        {/* Main Content Area */}
+                        {!imagePreview && !isProcessing && (
+                            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                                <ImageUploader onImageSelect={handleImageSelect} />
+                            </div>
+                        )}
+
+                        {/* Processing State */}
+                        {isProcessing && (
+                            <Card className="max-w-2xl mx-auto overflow-hidden animate-in zoom-in-95 duration-300">
+                                <div className="p-16 text-center space-y-8">
+                                    {/* Spinner with % in Middle */}
+                                    <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
+                                        <div className="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                                        <div className="absolute inset-0 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin"></div>
+                                        <span className="text-3xl font-bold text-white z-10 tabular-nums">
+                                            {progress}%
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                        <h3 className="text-2xl font-bold text-white">
+                                            {progress === 100 ? "Complete!" : (progress < 10 ? "Loading AI Model..." : "Processing Image...")}
+                                        </h3>
+                                        <p className="text-slate-400 max-w-md mx-auto">
+                                            {progress === 100 
+                                                ? "Almost there..." 
+                                                : (progress < 10 
+                                                    ? "Downloading high-precision neural network (first time only)..." 
+                                                    : "Analyzing pixels and removing background...")}
+                                        </p>
+                                        {/* Progress Bar */}
+                                        <div className="w-full bg-slate-800 rounded-full h-2.5 mt-4 overflow-hidden">
+                                            <div 
+                                                className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" 
+                                                style={{ width: `${Math.max(progress, 5)}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
+
+                        {/* Results */}
+                        {imagePreview && !isProcessing && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {/* Original */}
+                                    <Card className="overflow-hidden flex flex-col group">
+                                        <div className="p-4 border-b border-slate-800/50 bg-slate-900/40 flex items-center justify-between">
+                                            <h3 className="font-semibold text-slate-300">Original</h3>
+                                            <ImageIcon className="w-4 h-4 text-slate-600" />
+                                        </div>
+                                        <div className="p-6 flex-1 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2nk5eamZAIK0onmDx38GqGjYdQ/3NgYGD4Lw58xZgYGJ68+fP//348eP//z58+//CAMRAf1w2l0OAAAAAElFTkSuQmCC')] bg-repeat min-h-[350px] flex items-center justify-center">
+                                            <img 
+                                                src={imagePreview} 
+                                                alt="Original" 
+                                                className="max-w-full h-auto rounded-xl shadow-2xl"
+                                            />
+                                        </div>
+                                    </Card>
+
+                                    {/* Processed */}
+                                    <Card className="overflow-hidden flex flex-col group relative">
+                                        <div className="absolute top-0 right-0 p-4 z-20">
+                                            {processedCanvas && (
+                                                <DownloadButton canvas={processedCanvas} filename={fileName} bgColor={bgColor} />
+                                            )}
+                                        </div>
+                                        <div className="p-4 border-b border-slate-800/50 bg-slate-900/40 flex items-center justify-between">
+                                            <h3 className="font-semibold text-indigo-400">Removed Background</h3>
+                                            <Sparkles className="w-4 h-4 text-indigo-600" />
+                                        </div>
+                                        
+                                        {/* Color Picker */}
+                                        <div className="px-4 py-3 flex items-center justify-center gap-2 flex-wrap border-b border-slate-800/50 bg-slate-900/40 z-10">
+                                            <span className="text-xs text-slate-500 uppercase font-semibold tracking-wider w-full text-center mb-2">Background:</span>
+                                            {colors.map((c) => (
+                                                <button
+                                                    key={c.val}
+                                                    onClick={() => setBgColor(c.val)}
+                                                    title={c.name}
+                                                    className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center text-xs
+                                                        ${bgColor === c.val 
+                                                            ? 'border-indigo-400 ring-2 ring-indigo-500/50' 
+                                                            : 'border-slate-600 hover:border-slate-500'}`}
+                                                    style={{ 
+                                                        backgroundColor: c.val === 'transparent' 
+                                                            ? 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 10px 10px' 
+                                                            : c.val 
+                                                    }}
+                                                >
+                                                    {c.val === 'transparent' && <span className="text-slate-400 font-bold text-[10px]">/</span>}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div 
+                                            className="p-6 flex-1 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2nk5eamZAIK0onmDx38GqGjYdQ/3NgYGD4Lw58xZgYGJ68+fP//348eP//z58+//CAMRAf1w2l0OAAAAAElFTkSuQmCC')] bg-repeat min-h-[350px] flex items-center justify-center relative"
+                                            style={{ backgroundColor: bgColor }}
+                                        >
+                                            {processedCanvas ? (
+                                                <img 
+                                                    src={processedCanvas.toDataURL('image/png')} 
+                                                    alt="Processed" 
+                                                    className="max-w-full h-auto rounded-xl shadow-2xl relative z-10"
+                                                />
+                                            ) : (
+                                                <div className="text-center text-slate-500">
+                                                    <X className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                                                    <p>Processing failed</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </Card>
+                                </div>
+
+                                <div className="flex justify-center pt-4">
+                                    <Button onClick={resetApp} variant="outline" className="gap-2">
+                                        <RefreshCw className="w-4 h-4" />
+                                        Process Another Image
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Hidden Processor */}
+                        {imagePreview && isProcessing && (
+                            <ImageProcessor 
+                                imagePreview={imagePreview} 
+                                onComplete={handleProcessingComplete}
+                                onError={handleError}
+                                onProgress={setProgress}
+                            />
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
