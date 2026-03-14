@@ -1,1105 +1,789 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BG Remoover — AI Background Removal</title>
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z%22/></svg>">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <style>
-        * { box-sizing: border-box; }
-
-        :root {
-            --bg: #06050a;
-            --surface: #0e0c17;
-            --surface2: #161323;
-            --border: rgba(255,255,255,0.06);
-            --border-hover: rgba(255,255,255,0.12);
-            --accent: #b060ff;
-            --accent2: #5b8aff;
-            --text: #f0ecff;
-            --muted: #6b6580;
-            --success: #34d18a;
-            --danger: #ff5b5b;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'DM Sans', sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-        }
-
-        h1,h2,h3,h4,h5,h6,.font-display {
-            font-family: 'Syne', sans-serif;
-        }
-
-        /* Noise texture */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.5;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: #2a2440; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3d3560; }
-
-        /* Ambient gradient */
-        .ambient {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(120px);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Checkerboard for transparent bg */
-        .checker {
-            background-image: 
-                linear-gradient(45deg, #1a1a2e 25%, transparent 25%),
-                linear-gradient(-45deg, #1a1a2e 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, #1a1a2e 75%),
-                linear-gradient(-45deg, transparent 75%, #1a1a2e 75%);
-            background-size: 16px 16px;
-            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-            background-color: #12101e;
-        }
-
-        /* Glow button */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 28px;
-            font-family: 'Syne', sans-serif;
-            font-weight: 600;
-            font-size: 14px;
-            letter-spacing: 0.02em;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 30px rgba(176, 96, 255, 0.25);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 0 50px rgba(176, 96, 255, 0.4);
-        }
-        .btn-primary:active { transform: translateY(0); }
-        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-        .btn-ghost {
-            background: rgba(255,255,255,0.04);
-            color: var(--muted);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 11px 24px;
-            font-family: 'Syne', sans-serif;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-ghost:hover {
-            background: rgba(255,255,255,0.08);
-            color: var(--text);
-            border-color: var(--border-hover);
-        }
-
-        /* Card */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            overflow: hidden;
-            transition: border-color 0.3s ease;
-        }
-        .card:hover { border-color: var(--border-hover); }
-
-        /* Upload zone */
-        .upload-zone {
-            border: 2px dashed rgba(176, 96, 255, 0.2);
-            border-radius: 24px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        .upload-zone:hover, .upload-zone.dragging {
-            border-color: rgba(176, 96, 255, 0.6);
-            background: rgba(176, 96, 255, 0.04);
-        }
-        .upload-zone.dragging {
-            transform: scale(1.01);
-            box-shadow: 0 0 60px rgba(176, 96, 255, 0.15);
-        }
-
-        /* Progress ring */
-        .progress-ring circle {
-            transition: stroke-dashoffset 0.1s linear;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-        }
-
-        /* Tag */
-        .tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-family: 'Syne', sans-serif;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        /* Admin panel styles */
-        .admin-stat-card {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.2s ease;
-        }
-        .admin-stat-card:hover {
-            border-color: var(--border-hover);
-            transform: translateY(-2px);
-        }
-
-        .admin-table th {
-            font-family: 'Syne', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--muted);
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-        }
-        .admin-table td {
-            padding: 12px 16px;
-            font-size: 13px;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            vertical-align: middle;
-        }
-        .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-        .fade-up { animation: fadeUp 0.5s ease forwards; }
-        .fade-up-1 { animation: fadeUp 0.5s 0.1s ease both; }
-        .fade-up-2 { animation: fadeUp 0.5s 0.2s ease both; }
-        .fade-up-3 { animation: fadeUp 0.5s 0.3s ease both; }
-        .spin { animation: spin 1s linear infinite; }
-        .pulse { animation: pulse 2s ease infinite; }
-
-        /* Input */
-        .input {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: var(--text);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            width: 100%;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .input:focus { border-color: rgba(176, 96, 255, 0.5); }
-        .input::placeholder { color: var(--muted); }
-
-        /* Color swatch */
-        .swatch {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .swatch:hover { transform: scale(1.15); }
-        .swatch.active {
-            border-color: white;
-            box-shadow: 0 0 0 2px rgba(176, 96, 255, 0.5);
-            transform: scale(1.15);
-        }
-
-        /* Sidebar nav */
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-family: 'Syne', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--muted);
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
-        .nav-item.active { background: rgba(176, 96, 255, 0.12); color: var(--accent); }
-
-        /* Badge dot */
-        .dot {
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BG Remoover</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22><path d=%22m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;
+  --s1:#0f0f0f;
+  --s2:#161616;
+  --s3:#1e1e1e;
+  --b1:rgba(255,255,255,0.06);
+  --b2:rgba(255,255,255,0.10);
+  --b3:rgba(255,255,255,0.16);
+  --t1:#ffffff;
+  --t2:rgba(255,255,255,0.6);
+  --t3:rgba(255,255,255,0.35);
+  --green:#3ddc84;
+  --red:#ff4f4f;
+  --blue:#4f9fff;
+}
+body{background:var(--bg);color:var(--t1);font-family:'Geist',sans-serif;overflow-x:hidden}
+.serif{font-family:'Instrument Serif',serif}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:10px;font-family:'Geist',sans-serif;font-weight:500;font-size:14px;cursor:pointer;transition:all .15s ease}
+.btn-white{background:#fff;color:#000;padding:12px 28px}
+.btn-white:hover{background:#e8e8e8;transform:translateY(-1px)}
+.btn-white:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;color:var(--t2);border:1px solid var(--b2);padding:11px 24px}
+.btn-outline:hover{background:var(--s2);color:var(--t1);border-color:var(--b3)}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-danger{background:rgba(255,79,79,.1);color:var(--red);border:1px solid rgba(255,79,79,.2);padding:9px 18px;font-size:13px}
+.btn-danger:hover{background:rgba(255,79,79,.15)}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:16px;overflow:hidden}
+.card:hover{border-color:var(--b2);transition:border-color .2s}
+.input{background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:11px 15px;color:var(--t1);font-family:'Geist',sans-serif;font-size:14px;width:100%;outline:none;transition:border-color .15s}
+.input:focus{border-color:rgba(255,255,255,.25)}
+.input::placeholder{color:var(--t3)}
+.checker{background-image:linear-gradient(45deg,#1c1c1c 25%,transparent 25%),linear-gradient(-45deg,#1c1c1c 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1c1c1c 75%),linear-gradient(-45deg,transparent 75%,#1c1c1c 75%);background-size:14px 14px;background-position:0 0,0 7px,7px -7px,-7px 0;background-color:#141414}
+.upload-zone{border:1px solid var(--b2);border-radius:20px;transition:all .2s ease;cursor:pointer;background:var(--s1)}
+.upload-zone:hover,.upload-zone.drag{border-color:rgba(255,255,255,.3);background:var(--s2)}
+.upload-zone.drag{transform:scale(1.005)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fa{animation:fadeUp .4s ease both}
+.fa1{animation:fadeUp .4s .08s ease both}
+.fa2{animation:fadeUp .4s .16s ease both}
+.shake{animation:shake .4s ease}
+.spin{animation:spin 1s linear infinite}
+.pulse-anim{animation:pulse 2s ease infinite}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;transition:all .15s;user-select:none}
+.nav-item:hover{background:var(--s2);color:var(--t2)}
+.nav-item.active{background:var(--s2);color:var(--t1)}
+.stat{background:var(--s2);border:1px solid var(--b1);border-radius:14px;padding:22px;transition:all .15s}
+.stat:hover{border-color:var(--b2);transform:translateY(-1px)}
+.tbl th{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);padding:10px 16px;border-bottom:1px solid var(--b1);text-align:left}
+.tbl td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.025);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.015)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.04em}
+.sw{width:28px;height:28px;border-radius:50%;cursor:pointer;transition:all .15s;border:2px solid transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sw:hover{transform:scale(1.15)}
+.sw.on{border-color:rgba(255,255,255,.7);transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.2)}
+.ring circle{transition:stroke-dashoffset .1s linear;transform:rotate(-90deg);transform-origin:50% 50%}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite}
+.scroll-x{overflow-x:auto}
+</style>
 </head>
 <body>
-    <div id="root" style="position:relative;z-index:1;min-height:100vh;"></div>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+import { Upload, Download, Sparkles, X, Image as Img, RefreshCw, Check, Lock, LayoutDashboard, Settings, LogOut, Activity, Clock, Globe, TrendingUp, BarChart2, AlertCircle, Shield, Eye, ChevronRight, Users, MousePointer, Timer, FileImage, Trash2 } from 'https://esm.sh/lucide-react@0.344.0';
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
-    <script type="text/babel" data-type="module">
-        import { Upload, Download, Sparkles, X, Image as ImageIcon, RefreshCw, Check, Lock, LayoutDashboard, Image, Users, Settings, LogOut, TrendingUp, Zap, Eye, ChevronRight, Shield, Activity, Clock, Globe, BarChart2, AlertCircle } from 'https://esm.sh/lucide-react@0.344.0';
+/* ═══ ANALYTICS ═══ */
+const AK = 'bgrm_v2';
+const defaultData = () => ({ visitors:[], uploads:[], pageviews:[] });
+const getDB = () => { try { const r=localStorage.getItem(AK); return r?JSON.parse(r):defaultData(); } catch { return defaultData(); } };
+const saveDB = db => { try { localStorage.setItem(AK,JSON.stringify(db)); } catch {} };
+const getOrCreateVid = () => { const k='bgrm_vid'; let id=localStorage.getItem(k); if(!id){id=Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem(k,id);} return id; };
 
-        const { useState, useEffect, useCallback, useRef, useMemo } = React;
+const trackVisit = () => {
+  const db=getDB(); const vid=getOrCreateVid(); const ts=Date.now();
+  const ex=db.visitors.find(v=>v.id===vid);
+  const isNew=!ex||(ts-(ex.lastTs||0))>1800000;
+  if(!ex){db.visitors.push({id:vid,firstTs:ts,lastTs:ts,sessions:1,lang:navigator.language||'?',tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'?',w:window.innerWidth,h:window.innerHeight,ref:document.referrer||'direct',ua:navigator.userAgent});}
+  else{ex.lastTs=ts;if(isNew)ex.sessions=(ex.sessions||1)+1;}
+  db.pageviews.push({ts,path:location.pathname,vid});
+  db.visitors=db.visitors.slice(-2000); db.pageviews=db.pageviews.slice(-5000);
+  saveDB(db);
+};
 
-        /* ─── Storage helpers (simulate analytics) ─── */
-        const STORAGE_KEY = 'bgrm_analytics';
-        const getAnalytics = () => {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                return raw ? JSON.parse(raw) : { total: 0, sessions: [], uploads: [] };
-            } catch { return { total: 0, sessions: [], uploads: [] }; }
-        };
-        const recordUpload = (filename, size) => {
-            try {
-                const d = getAnalytics();
-                d.total = (d.total || 0) + 1;
-                d.uploads = [...(d.uploads || []), {
-                    id: Date.now(),
-                    name: filename,
-                    size: Math.round(size / 1024),
-                    time: new Date().toISOString(),
-                    status: 'processing',
-                }].slice(-50);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
-            } catch {}
-        };
-        const markUploadDone = (id, success) => {
-            try {
-                const d = getAnalytics();
-                d.uploads = (d.uploads || []).map(u => u.id === id ? { ...u, status: success ? 'done' : 'error' } : u);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
-            } catch {}
-        };
+const trackUpload = (name,size) => { const db=getDB(); const id=Date.now(); db.uploads.push({id,ts:Date.now(),name,size:Math.round(size/1024),status:'processing',dur:null}); db.uploads=db.uploads.slice(-500); saveDB(db); return id; };
+const finishUpload = (id,ok,dur) => { const db=getDB(); const u=db.uploads.find(x=>x.id===id); if(u){u.status=ok?'done':'error';u.dur=dur;} saveDB(db); };
 
-        /* ─── Routing (hash-based) ─── */
-        const useRoute = () => {
-            const [path, setPath] = useState(window.location.pathname + window.location.hash);
-            useEffect(() => {
-                const onPop = () => setPath(window.location.pathname + window.location.hash);
-                window.addEventListener('popstate', onPop);
-                return () => window.removeEventListener('popstate', onPop);
-            }, []);
-            const navigate = (to) => {
-                window.history.pushState({}, '', to);
-                setPath(to);
-            };
-            return { path, navigate };
-        };
+/* ═══ ROUTING ═══ */
+const useRoute = () => {
+  const [path,setPath]=useState(location.pathname);
+  useEffect(()=>{ const h=()=>setPath(location.pathname); window.addEventListener('popstate',h); return()=>window.removeEventListener('popstate',h); },[]);
+  const go = to => { history.pushState({},''  ,to); setPath(to); };
+  return {path,go};
+};
 
-        /* ─── Cached BG removal ─── */
-        let cachedRemoveBackground = null;
-        let isLibraryLoading = false;
+/* ═══ AI CACHE ═══ */
+let cachedRmBg=null;
 
-        /* ══════════════════════════════════════════
-           MAIN APP
-        ══════════════════════════════════════════ */
-        const App = () => {
-            const { path, navigate } = useRoute();
-            const isAdmin = path.includes('/admin');
+/* ═══ ROOT ═══ */
+const App = () => {
+  const {path,go}=useRoute();
+  useEffect(()=>{ trackVisit(); },[]);
+  if(path.startsWith('/admin')) return <AdminShell go={go}/>;
+  return <MainApp go={go}/>;
+};
 
-            if (isAdmin) return <AdminShell navigate={navigate} />;
-            return <MainApp navigate={navigate} />;
-        };
+/* ═══ MAIN APP ═══ */
+const MainApp = ({go}) => {
+  const [preview,setPreview]=useState(null);
+  const [canvas,setCanvas]=useState(null);
+  const [processing,setProcessing]=useState(false);
+  const [err,setErr]=useState(null);
+  const [fileName,setFileName]=useState('image');
+  const [realP,setRealP]=useState(0);
+  const [visP,setVisP]=useState(0);
+  const [bg,setBg]=useState('transparent');
+  const [uploadId,setUploadId]=useState(null);
+  const [startTs,setStartTs]=useState(null);
+  const [viewMode,setViewMode]=useState('split');
 
-        /* ══════════════════════════════════════════
-           MAIN APP — Background Remover
-        ══════════════════════════════════════════ */
-        const MainApp = ({ navigate }) => {
-            const [imagePreview, setImagePreview] = useState(null);
-            const [processedCanvas, setProcessedCanvas] = useState(null);
-            const [isProcessing, setIsProcessing] = useState(false);
-            const [error, setError] = useState(null);
-            const [fileName, setFileName] = useState("image");
-            const [realProgress, setRealProgress] = useState(0);
-            const [visualProgress, setVisualProgress] = useState(0);
-            const [bgColor, setBgColor] = useState('transparent');
-            const [uploadId, setUploadId] = useState(null);
-            const [viewMode, setViewMode] = useState('split'); // split | slider | single
+  useEffect(()=>{
+    if(visP<realP){ const t=setInterval(()=>setVisP(p=>p<realP?Math.min(p+2,realP):p),12); return()=>clearInterval(t); }
+  },[realP,visP]);
 
-            useEffect(() => {
-                if (visualProgress < realProgress) {
-                    const timer = setInterval(() => {
-                        setVisualProgress(prev => prev < realProgress ? Math.min(prev + 2, realProgress) : prev);
-                    }, 12);
-                    return () => clearInterval(timer);
-                }
-            }, [realProgress, visualProgress]);
+  const onSelect=useCallback((file,prev)=>{
+    setFileName(file.name.replace(/\.[^.]+$/,''));
+    setPreview(prev);setCanvas(null);setProcessing(true);setErr(null);setRealP(0);setVisP(0);
+    const id=trackUpload(file.name,file.size); setUploadId(id); setStartTs(Date.now());
+  },[]);
 
-            const handleImageSelect = useCallback((file, preview) => {
-                const name = file.name.split('.').slice(0, -1).join('.');
-                setFileName(name);
-                setImagePreview(preview);
-                setProcessedCanvas(null);
-                setIsProcessing(true);
-                setError(null);
-                setRealProgress(0);
-                setVisualProgress(0);
-                const id = Date.now();
-                setUploadId(id);
-                recordUpload(file.name, file.size);
-            }, []);
+  const onDone=useCallback(c=>{
+    setCanvas(c);setRealP(100);
+    const dur=startTs?Math.round((Date.now()-startTs)/1000):null;
+    if(uploadId)finishUpload(uploadId,true,dur);
+    setTimeout(()=>setProcessing(false),600);
+  },[uploadId,startTs]);
 
-            const handleProcessingComplete = useCallback((canvas) => {
-                setProcessedCanvas(canvas);
-                setRealProgress(100);
-                if (uploadId) markUploadDone(uploadId, true);
-                setTimeout(() => setIsProcessing(false), 700);
-            }, [uploadId]);
+  const onErr=useCallback(m=>{
+    setErr(m);setProcessing(false);
+    if(uploadId)finishUpload(uploadId,false,null);
+  },[uploadId]);
 
-            const handleError = useCallback((msg) => {
-                setError(msg);
-                setIsProcessing(false);
-                if (uploadId) markUploadDone(uploadId, false);
-            }, [uploadId]);
+  const reset=()=>{setPreview(null);setCanvas(null);setErr(null);setRealP(0);setVisP(0);};
 
-            const resetApp = () => {
-                setImagePreview(null);
-                setProcessedCanvas(null);
-                setError(null);
-                setRealProgress(0);
-                setVisualProgress(0);
-                setUploadId(null);
-            };
+  const colors=[
+    {v:'transparent',bg:'repeating-conic-gradient(#222 0% 25%,#111 0% 50%) 0 0/10px 10px'},
+    {v:'#ffffff'},{v:'#000000'},{v:'#0a0a0a'},{v:'#1a1a2e'},{v:'#0f3460'},
+    {v:'#e94560'},{v:'#f97316'},{v:'#fbbf24'},{v:'#22c55e'},{v:'#06b6d4'},{v:'#a855f7'},
+  ];
 
-            const colors = [
-                { name: 'Transparent', val: 'transparent', bg: 'repeating-conic-gradient(#222 0% 25%, #111 0% 50%) 0 0 / 10px 10px' },
-                { name: 'White', val: '#ffffff' },
-                { name: 'Black', val: '#000000' },
-                { name: 'Slate', val: '#334155' },
-                { name: 'Red', val: '#ef4444' },
-                { name: 'Orange', val: '#f97316' },
-                { name: 'Yellow', val: '#fbbf24' },
-                { name: 'Lime', val: '#84cc16' },
-                { name: 'Cyan', val: '#06b6d4' },
-                { name: 'Blue', val: '#3b82f6' },
-                { name: 'Violet', val: '#8b5cf6' },
-                { name: 'Pink', val: '#ec4899' },
-            ];
+  return (
+    <div style={{minHeight:'100vh',display:'flex',flexDirection:'column'}}>
+      <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0}}>
+        <div style={{position:'absolute',width:700,height:700,background:'radial-gradient(circle,rgba(255,255,255,0.022) 0%,transparent 70%)',top:'-15%',left:'25%',borderRadius:'50%'}}/>
+      </div>
 
-            return (
-                <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-                    {/* Ambient lights */}
-                    <div className="ambient" style={{ width: 600, height: 600, background: 'radial-gradient(circle, rgba(176,96,255,0.08) 0%, transparent 70%)', top: -200, left: '20%' }} />
-                    <div className="ambient" style={{ width: 500, height: 500, background: 'radial-gradient(circle, rgba(91,138,255,0.06) 0%, transparent 70%)', top: 100, right: '10%' }} />
+      {/* Header */}
+      <header style={{position:'relative',zIndex:1,padding:'20px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid var(--b1)'}}>
+        <span style={{fontFamily:"'Instrument Serif',serif",fontSize:22,letterSpacing:'-0.01em'}}>BG Remoover</span>
+      </header>
 
-                    {/* Header */}
-                    <header style={{ padding: '20px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Sparkles size={18} color="white" />
-                            </div>
-                            <span style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18, letterSpacing: '-0.02em' }}>
-                                BG Remoover
-                            </span>
-                            <span className="tag" style={{ background: 'rgba(176,96,255,0.12)', color: 'var(--accent)', marginLeft: 4 }}>v2</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'Syne', fontWeight: 600 }}>100% In-Browser · Private · Free</span>
-                        </div>
-                    </header>
+      <main style={{flex:1,position:'relative',zIndex:1,padding:'72px 48px',maxWidth:1100,margin:'0 auto',width:'100%'}}>
 
-                    <main style={{ flex: 1, padding: '60px 40px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-                        {/* Hero */}
-                        {!imagePreview && !isProcessing && (
-                            <div style={{ textAlign: 'center', marginBottom: 56 }} className="fade-up">
-                                <div className="tag" style={{ background: 'rgba(91,138,255,0.1)', color: 'var(--accent2)', marginBottom: 20, display: 'inline-flex' }}>
-                                    <Zap size={11} />
-                                    Powered by AI · Runs Locally
-                                </div>
-                                <h1 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(48px,6vw,80px)', lineHeight: 1.05, letterSpacing: '-0.03em', margin: '0 0 20px' }}>
-                                    Remove any<br />
-                                    <span style={{ background: 'linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>background</span>
-                                    , instantly.
-                                </h1>
-                                <p style={{ color: 'var(--muted)', fontSize: 18, maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
-                                    No uploads to servers. No accounts. No limits. Your images stay on your device.
-                                </p>
-                            </div>
-                        )}
+        {/* Hero */}
+        {!preview&&!processing&&(
+          <div style={{textAlign:'center',marginBottom:60}} className="fa">
+            <h1 style={{fontFamily:"'Instrument Serif',serif",fontSize:'clamp(52px,7vw,96px)',lineHeight:1.02,letterSpacing:'-0.03em',marginBottom:0,fontWeight:400,color:'white'}}>
+              Remove any background.
+            </h1>
+          </div>
+        )}
 
-                        {/* Error */}
-                        {error && (
-                            <div className="card fade-up" style={{ borderColor: 'rgba(255,91,91,0.3)', background: 'rgba(255,91,91,0.05)', padding: 20, display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-                                <div style={{ width: 36, height: 36, background: 'rgba(255,91,91,0.15)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <AlertCircle size={18} color="var(--danger)" />
-                                </div>
-                                <div>
-                                    <div style={{ fontFamily: 'Syne', fontWeight: 700, color: '#ff8a8a', fontSize: 14 }}>Processing Failed</div>
-                                    <div style={{ fontSize: 13, color: 'rgba(255,138,138,0.7)', marginTop: 2 }}>{error}</div>
-                                </div>
-                                <button onClick={() => setError(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><X size={16} /></button>
-                            </div>
-                        )}
-
-                        {/* Upload zone */}
-                        {!imagePreview && !isProcessing && (
-                            <div className="fade-up-1">
-                                <ImageUploader onImageSelect={handleImageSelect} />
-                                {/* Feature pills */}
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 32, flexWrap: 'wrap' }}>
-                                    {['PNG, JPG, WebP', 'No size limits', 'Transparent export', 'Custom background colors'].map(f => (
-                                        <div key={f} className="tag" style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--muted)', border: '1px solid var(--border)' }}>
-                                            <Check size={10} color="var(--success)" />{f}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Processing */}
-                        {isProcessing && (
-                            <div className="fade-up" style={{ display: 'flex', justifyContent: 'center' }}>
-                                <div className="card" style={{ padding: 64, textAlign: 'center', width: '100%', maxWidth: 540 }}>
-                                    <div style={{ position: 'relative', width: 160, height: 160, margin: '0 auto 36px' }}>
-                                        <svg className="progress-ring" width="160" height="160">
-                                            <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-                                            <circle
-                                                cx="80" cy="80" r="68" fill="none"
-                                                stroke="url(#pg)" strokeWidth="8"
-                                                strokeLinecap="round"
-                                                strokeDasharray={`${2 * Math.PI * 68}`}
-                                                strokeDashoffset={`${2 * Math.PI * 68 * (1 - visualProgress / 100)}`}
-                                            />
-                                            <defs>
-                                                <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                    <stop offset="0%" stopColor="var(--accent)" />
-                                                    <stop offset="100%" stopColor="var(--accent2)" />
-                                                </linearGradient>
-                                            </defs>
-                                        </svg>
-                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                            <span style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 38, letterSpacing: '-0.04em' }}>{visualProgress}<span style={{ fontSize: 20, color: 'var(--muted)' }}>%</span></span>
-                                        </div>
-                                    </div>
-                                    <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 22, marginBottom: 10 }}>
-                                        {visualProgress === 100 ? 'Almost done...' : 'Removing background'}
-                                    </div>
-                                    <div style={{ color: 'var(--muted)', fontSize: 14 }}>AI is analyzing your image locally</div>
-                                    <div style={{ marginTop: 24, height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 99, overflow: 'hidden' }}>
-                                        <div style={{ height: '100%', width: `${Math.max(visualProgress, 1)}%`, background: 'linear-gradient(90deg,var(--accent),var(--accent2))', borderRadius: 99, transition: 'width 0.12s ease' }} />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Result */}
-                        {imagePreview && !isProcessing && (
-                            <div className="fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                                {/* Toolbar */}
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>View:</span>
-                                        {[['split','Split'], ['single','Result only']].map(([v, l]) => (
-                                            <button key={v} onClick={() => setViewMode(v)} className="btn-ghost" style={{ padding: '7px 16px', fontSize: 12, color: viewMode === v ? 'var(--text)' : 'var(--muted)', background: viewMode === v ? 'rgba(255,255,255,0.08)' : 'transparent', border: `1px solid ${viewMode === v ? 'var(--border-hover)' : 'var(--border)'}` }}>
-                                                {l}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        {processedCanvas && <DownloadButton canvas={processedCanvas} filename={fileName} bgColor={bgColor} />}
-                                        <button className="btn-ghost" onClick={resetApp} style={{ padding: '11px 16px' }}>
-                                            <RefreshCw size={14} />
-                                            New Image
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Images */}
-                                <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'split' ? '1fr 1fr' : '1fr', gap: 20 }}>
-                                    {viewMode === 'split' && (
-                                        <div className="card" style={{ overflow: 'hidden' }}>
-                                            <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <ImageIcon size={14} color="var(--muted)" />
-                                                <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Original</span>
-                                            </div>
-                                            <div className="checker" style={{ padding: 24, minHeight: 380, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <img src={imagePreview} alt="Original" style={{ maxWidth: '100%', maxHeight: 500, borderRadius: 12, boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }} />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="card" style={{ border: '1px solid rgba(176,96,255,0.2)', overflow: 'hidden' }}>
-                                        <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <Sparkles size={14} color="var(--accent)" />
-                                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 12, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Result</span>
-                                        </div>
-
-                                        {/* Color picker */}
-                                        <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                            <span style={{ fontSize: 11, fontFamily: 'Syne', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>BG:</span>
-                                            {colors.map(c => (
-                                                <button
-                                                    key={c.val}
-                                                    title={c.name}
-                                                    className={`swatch ${bgColor === c.val ? 'active' : ''}`}
-                                                    onClick={() => setBgColor(c.val)}
-                                                    style={{ background: c.bg || c.val, border: '2px solid rgba(255,255,255,0.1)' }}
-                                                >
-                                                    {bgColor === c.val && c.val !== 'transparent' && <Check size={14} color="white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }} />}
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        <div
-                                            className={bgColor === 'transparent' ? 'checker' : ''}
-                                            style={{ padding: 24, minHeight: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', background: bgColor !== 'transparent' ? bgColor : undefined }}
-                                        >
-                                            {processedCanvas ? (
-                                                <img src={processedCanvas.toDataURL('image/png')} alt="Result" style={{ maxWidth: '100%', maxHeight: 500, borderRadius: 12, boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }} />
-                                            ) : (
-                                                <div style={{ textAlign: 'center', color: 'var(--muted)' }}>
-                                                    <X size={40} style={{ marginBottom: 8, opacity: 0.4 }} />
-                                                    <p style={{ fontSize: 13 }}>Processing failed</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Hidden processor */}
-                        {imagePreview && isProcessing && (
-                            <ImageProcessor imagePreview={imagePreview} onComplete={handleProcessingComplete} onError={handleError} onProgress={setRealProgress} />
-                        )}
-                    </main>
-
-                    <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                        <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13, color: 'var(--muted)' }}>BG Remoover v2 — Open Source</span>
-                        <span style={{ fontSize: 12, color: 'rgba(107,101,128,0.6)' }}>Your images never leave your browser</span>
-                    </footer>
-                </div>
-            );
-        };
-
-        /* ─── Image Uploader ─── */
-        const ImageUploader = ({ onImageSelect }) => {
-            const [isDragging, setIsDragging] = useState(false);
-            const fileInputRef = useRef(null);
-
-            const handleDrag = (e) => {
-                e.preventDefault();
-                if (e.type === 'dragenter' || e.type === 'dragover') setIsDragging(true);
-                else setIsDragging(false);
-            };
-
-            const handleDrop = (e) => {
-                e.preventDefault();
-                setIsDragging(false);
-                const f = e.dataTransfer.files[0];
-                if (f) processFile(f);
-            };
-
-            const processFile = (file) => {
-                if (!file.type.match('image.*')) { alert('Please select an image file'); return; }
-                const reader = new FileReader();
-                reader.onload = (e) => onImageSelect(file, e.target.result);
-                reader.readAsDataURL(file);
-            };
-
-            return (
-                <div
-                    className={`upload-zone ${isDragging ? 'dragging' : ''}`}
-                    style={{ padding: '80px 40px', textAlign: 'center' }}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current.click()}
-                >
-                    <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/png,image/jpeg,image/webp" onChange={e => e.target.files[0] && processFile(e.target.files[0])} />
-                    <div style={{ width: 80, height: 80, background: 'rgba(176,96,255,0.08)', border: '1px solid rgba(176,96,255,0.2)', borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px' }}>
-                        <Upload size={32} color="var(--accent)" strokeWidth={1.5} />
-                    </div>
-                    <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 28, letterSpacing: '-0.02em', marginBottom: 10 }}>
-                        Drop your image here
-                    </div>
-                    <div style={{ color: 'var(--muted)', marginBottom: 28, fontSize: 15 }}>or <span style={{ color: 'var(--accent)' }}>click to browse</span></div>
-                    <button className="btn-primary" onClick={e => { e.stopPropagation(); fileInputRef.current.click(); }}>
-                        <Upload size={16} />
-                        Choose Image
-                    </button>
-                </div>
-            );
-        };
-
-        /* ─── Image Processor ─── */
-        const ImageProcessor = ({ imagePreview, onComplete, onError, onProgress }) => {
-            useEffect(() => {
-                const run = async () => {
-                    try {
-                        const resp = await fetch(imagePreview);
-                        const blob = await resp.blob();
-
-                        const opts = {
-                            progress: (key, cur, tot) => {
-                                const pct = tot > 0 ? Math.round((cur / tot) * 100) : 0;
-                                onProgress(pct);
-                            },
-                            debug: false,
-                            proxyToWorker: true,
-                            model: 'medium',
-                        };
-
-                        let resultBlob;
-                        if (cachedRemoveBackground) {
-                            resultBlob = await cachedRemoveBackground(blob, opts);
-                        } else {
-                            isLibraryLoading = true;
-                            onProgress(1);
-                            const { removeBackground } = await import('https://esm.sh/@imgly/background-removal@1.4.5');
-                            cachedRemoveBackground = removeBackground;
-                            isLibraryLoading = false;
-                            resultBlob = await removeBackground(blob, opts);
-                        }
-
-                        const bitmap = await createImageBitmap(resultBlob);
-                        const canvas = document.createElement('canvas');
-                        canvas.width = bitmap.width;
-                        canvas.height = bitmap.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(bitmap, 0, 0);
-                        onComplete(canvas);
-                    } catch (err) {
-                        onError('Failed to process image. ' + (err.message || ''));
-                    }
-                };
-                run();
-            }, []);
-            return null;
-        };
-
-        /* ─── Download Button ─── */
-        const DownloadButton = ({ canvas, filename, bgColor }) => {
-            const download = () => {
-                const tmp = document.createElement('canvas');
-                tmp.width = canvas.width;
-                tmp.height = canvas.height;
-                const ctx = tmp.getContext('2d');
-                if (bgColor !== 'transparent') {
-                    ctx.fillStyle = bgColor;
-                    ctx.fillRect(0, 0, tmp.width, tmp.height);
-                }
-                ctx.drawImage(canvas, 0, 0);
-                const a = document.createElement('a');
-                a.download = `${filename}-nobg.png`;
-                a.href = tmp.toDataURL('image/png');
-                a.click();
-            };
-            return (
-                <button className="btn-primary" onClick={download} style={{ fontSize: 13 }}>
-                    <Download size={15} />
-                    Download PNG
-                </button>
-            );
-        };
-
-        /* ══════════════════════════════════════════
-           ADMIN SHELL — Login gate
-        ══════════════════════════════════════════ */
-        const AdminShell = ({ navigate }) => {
-            const [authed, setAuthed] = useState(() => sessionStorage.getItem('bgrm_admin') === '1');
-
-            if (!authed) return <AdminLogin onAuth={() => { sessionStorage.setItem('bgrm_admin', '1'); setAuthed(true); }} navigate={navigate} />;
-            return <AdminPanel navigate={navigate} onLogout={() => { sessionStorage.removeItem('bgrm_admin'); setAuthed(false); }} />;
-        };
-
-        /* ─── Admin Login ─── */
-        const AdminLogin = ({ onAuth, navigate }) => {
-            const [pw, setPw] = useState('');
-            const [error, setError] = useState(false);
-            const [shaking, setShaking] = useState(false);
-
-            const submit = () => {
-                if (pw === 'Hundkatt') {
-                    onAuth();
-                } else {
-                    setError(true);
-                    setShaking(true);
-                    setTimeout(() => setShaking(false), 500);
-                }
-            };
-
-            return (
-                <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-                    <div className="ambient" style={{ width: 500, height: 500, background: 'radial-gradient(circle, rgba(176,96,255,0.07) 0%, transparent 70%)', top: '20%', left: '30%' }} />
-
-                    <div className="card fade-up" style={{ width: '100%', maxWidth: 400, padding: 48, position: 'relative' }}>
-                        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-                            <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                                <Shield size={28} color="white" />
-                            </div>
-                            <h1 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 26, marginBottom: 8 }}>Admin Access</h1>
-                            <p style={{ color: 'var(--muted)', fontSize: 14 }}>BG Remoover Control Panel</p>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className={shaking ? 'shake' : ''}>
-                            <div>
-                                <label style={{ fontSize: 12, fontFamily: 'Syne', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Password</label>
-                                <input
-                                    className="input"
-                                    type="password"
-                                    value={pw}
-                                    onChange={e => { setPw(e.target.value); setError(false); }}
-                                    onKeyDown={e => e.key === 'Enter' && submit()}
-                                    placeholder="Enter admin password"
-                                    style={{ borderColor: error ? 'rgba(255,91,91,0.5)' : undefined }}
-                                    autoFocus
-                                />
-                                {error && <p style={{ fontSize: 12, color: 'var(--danger)', marginTop: 6 }}>Incorrect password. Try again.</p>}
-                            </div>
-                            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={submit}>
-                                <Lock size={15} />
-                                Sign In
-                            </button>
-                            <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: 13 }} onClick={() => navigate('/')}>
-                                ← Back to App
-                            </button>
-                        </div>
-                    </div>
-                    <style>{`.shake { animation: shake 0.4s ease; } @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(4px)} }`}</style>
-                </div>
-            );
-        };
-
-        /* ─── Admin Panel ─── */
-        const AdminPanel = ({ navigate, onLogout }) => {
-            const [activeTab, setActiveTab] = useState('dashboard');
-            const analytics = getAnalytics();
-            const uploads = (analytics.uploads || []).slice().reverse();
-            const total = analytics.total || 0;
-            const done = uploads.filter(u => u.status === 'done').length;
-            const errors = uploads.filter(u => u.status === 'error').length;
-            const avgSize = uploads.length ? Math.round(uploads.reduce((a, u) => a + (u.size || 0), 0) / uploads.length) : 0;
-
-            // Fake some extra data for a rich panel
-            const fakeLocations = ['Sweden', 'United States', 'Germany', 'Netherlands', 'United Kingdom', 'France'];
-            const fakeReferrers = ['Direct', 'Google', 'Twitter / X', 'GitHub', 'ProductHunt'];
-
-            const tabs = [
-                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                { id: 'uploads', label: 'Upload Log', icon: Image },
-                { id: 'settings', label: 'Settings', icon: Settings },
-            ];
-
-            return (
-                <div style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '240px 1fr', gridTemplateRows: 'auto 1fr' }}>
-                    {/* Top bar */}
-                    <div style={{ gridColumn: '1/-1', borderBottom: '1px solid var(--border)', padding: '16px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Sparkles size={15} color="white" />
-                            </div>
-                            <span style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 16 }}>BG Remoover</span>
-                            <ChevronRight size={14} color="var(--muted)" />
-                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 14, color: 'var(--muted)' }}>Admin</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <button className="btn-ghost" style={{ fontSize: 12, padding: '8px 14px' }} onClick={() => navigate('/')}>
-                                <Eye size={13} /> View Site
-                            </button>
-                            <button className="btn-ghost" style={{ fontSize: 12, padding: '8px 14px', color: 'var(--danger)' }} onClick={onLogout}>
-                                <LogOut size={13} /> Logout
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div style={{ borderRight: '1px solid var(--border)', padding: '24px 16px', background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <div style={{ padding: '8px 16px', marginBottom: 8 }}>
-                            <span style={{ fontSize: 10, fontFamily: 'Syne', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Menu</span>
-                        </div>
-                        {tabs.map(t => (
-                            <div key={t.id} className={`nav-item ${activeTab === t.id ? 'active' : ''}`} onClick={() => setActiveTab(t.id)}>
-                                <t.icon size={16} />
-                                {t.label}
-                            </div>
-                        ))}
-                        <div style={{ flex: 1 }} />
-                        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-                            <div style={{ padding: '10px 16px', fontSize: 12, color: 'var(--muted)' }}>
-                                <div style={{ fontFamily: 'Syne', fontWeight: 700, marginBottom: 2 }}>Admin Session</div>
-                                <div style={{ opacity: 0.6 }}>Active since page load</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Main content */}
-                    <div style={{ padding: 32, overflowY: 'auto' }}>
-                        {activeTab === 'dashboard' && <DashboardTab total={total} done={done} errors={errors} avgSize={avgSize} uploads={uploads} fakeLocations={fakeLocations} fakeReferrers={fakeReferrers} />}
-                        {activeTab === 'uploads' && <UploadsTab uploads={uploads} />}
-                        {activeTab === 'settings' && <SettingsTab />}
-                    </div>
-                </div>
-            );
-        };
-
-        /* ─── Dashboard Tab ─── */
-        const DashboardTab = ({ total, done, errors, avgSize, uploads, fakeLocations, fakeReferrers }) => {
-            const successRate = total > 0 ? Math.round((done / total) * 100) : 0;
-
-            const stats = [
-                { label: 'Total Processed', value: total, icon: Activity, color: 'var(--accent)', suffix: '' },
-                { label: 'Successful', value: done, icon: Check, color: 'var(--success)', suffix: '' },
-                { label: 'Success Rate', value: successRate, icon: TrendingUp, color: 'var(--accent2)', suffix: '%' },
-                { label: 'Avg File Size', value: avgSize, icon: BarChart2, color: '#f97316', suffix: 'KB' },
-            ];
-
-            return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-                    <div>
-                        <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 24, marginBottom: 4 }}>Dashboard</h2>
-                        <p style={{ color: 'var(--muted)', fontSize: 14 }}>Overview of your BG Remoover usage</p>
-                    </div>
-
-                    {/* Stats grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16 }}>
-                        {stats.map((s, i) => (
-                            <div key={i} className="admin-stat-card fade-up" style={{ animationDelay: `${i * 0.07}s` }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                                    <span style={{ fontSize: 12, fontFamily: 'Syne', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.label}</span>
-                                    <div style={{ width: 32, height: 32, background: `${s.color}15`, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <s.icon size={15} color={s.color} />
-                                    </div>
-                                </div>
-                                <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 32, letterSpacing: '-0.03em' }}>
-                                    {s.value}<span style={{ fontSize: 16, color: 'var(--muted)', fontWeight: 600 }}>{s.suffix}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                        {/* Recent uploads */}
-                        <div className="card">
-                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Clock size={14} color="var(--muted)" />
-                                <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13 }}>Recent Activity</span>
-                            </div>
-                            <div style={{ padding: 8 }}>
-                                {uploads.slice(0, 6).length === 0 && (
-                                    <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No activity yet. Process an image first.</div>
-                                )}
-                                {uploads.slice(0, 6).map((u, i) => (
-                                    <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, transition: 'background 0.15s' }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                        <div style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.04)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                            <ImageIcon size={14} color="var(--muted)" />
-                                        </div>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
-                                            <div style={{ fontSize: 11, color: 'var(--muted)' }}>{u.size} KB · {new Date(u.time).toLocaleTimeString()}</div>
-                                        </div>
-                                        <span className="dot" style={{ background: u.status === 'done' ? 'var(--success)' : u.status === 'error' ? 'var(--danger)' : 'var(--accent)' }} />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Top countries */}
-                        <div className="card">
-                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Globe size={14} color="var(--muted)" />
-                                <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13 }}>Top Locations</span>
-                                <span className="tag" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--muted)', fontSize: 10, marginLeft: 'auto' }}>Demo data</span>
-                            </div>
-                            <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                                {fakeLocations.map((loc, i) => {
-                                    const pct = Math.max(15, 80 - i * 12);
-                                    return (
-                                        <div key={loc}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                                                <span style={{ fontSize: 13 }}>{loc}</span>
-                                                <span style={{ fontSize: 12, color: 'var(--muted)' }}>{pct}%</span>
-                                            </div>
-                                            <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 99, overflow: 'hidden' }}>
-                                                <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg,var(--accent),var(--accent2))`, borderRadius: 99 }} />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Referrers */}
-                    <div className="card">
-                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <TrendingUp size={14} color="var(--muted)" />
-                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13 }}>Traffic Sources</span>
-                            <span className="tag" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--muted)', fontSize: 10, marginLeft: 'auto' }}>Demo data</span>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 0 }}>
-                            {fakeReferrers.map((ref, i) => {
-                                const pct = [42, 28, 15, 9, 6][i];
-                                return (
-                                    <div key={ref} style={{ padding: '20px', textAlign: 'center', borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
-                                        <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 28, letterSpacing: '-0.03em', marginBottom: 4 }}>{pct}%</div>
-                                        <div style={{ fontSize: 12, color: 'var(--muted)' }}>{ref}</div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        /* ─── Uploads Tab ─── */
-        const UploadsTab = ({ uploads }) => (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                <div>
-                    <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 24, marginBottom: 4 }}>Upload Log</h2>
-                    <p style={{ color: 'var(--muted)', fontSize: 14 }}>All image processing events from this browser</p>
-                </div>
-                <div className="card">
-                    {uploads.length === 0 ? (
-                        <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>
-                            <ImageIcon size={40} style={{ margin: '0 auto 16px', opacity: 0.3, display: 'block' }} />
-                            <p style={{ fontSize: 14 }}>No uploads recorded yet.</p>
-                            <p style={{ fontSize: 12, marginTop: 4, opacity: 0.6 }}>Process an image to see it here.</p>
-                        </div>
-                    ) : (
-                        <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr>
-                                    <th>File</th>
-                                    <th>Size</th>
-                                    <th>Time</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {uploads.map(u => (
-                                    <tr key={u.id}>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                <div style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.04)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                    <ImageIcon size={14} color="var(--muted)" />
-                                                </div>
-                                                <span style={{ fontSize: 13, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</span>
-                                            </div>
-                                        </td>
-                                        <td style={{ color: 'var(--muted)', fontSize: 13 }}>{u.size} KB</td>
-                                        <td style={{ color: 'var(--muted)', fontSize: 13 }}>{new Date(u.time).toLocaleString()}</td>
-                                        <td>
-                                            <span className="tag" style={{
-                                                background: u.status === 'done' ? 'rgba(52,209,138,0.1)' : u.status === 'error' ? 'rgba(255,91,91,0.1)' : 'rgba(176,96,255,0.1)',
-                                                color: u.status === 'done' ? 'var(--success)' : u.status === 'error' ? 'var(--danger)' : 'var(--accent)'
-                                            }}>
-                                                <span className="dot" style={{ background: u.status === 'done' ? 'var(--success)' : u.status === 'error' ? 'var(--danger)' : 'var(--accent)', width: 6, height: 6 }} />
-                                                {u.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
+        {/* Error */}
+        {err&&(
+          <div className="card fa" style={{borderColor:'rgba(255,79,79,.25)',background:'rgba(255,79,79,.05)',padding:16,display:'flex',alignItems:'center',gap:14,marginBottom:28}}>
+            <AlertCircle size={17} color="var(--red)" style={{flexShrink:0}}/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:600,color:'#ff8080',marginBottom:2}}>Processing failed</div>
+              <div style={{fontSize:12,color:'rgba(255,128,128,.5)'}}>{err}</div>
             </div>
-        );
+            <button onClick={()=>setErr(null)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--t3)',padding:4}}><X size={15}/></button>
+          </div>
+        )}
 
-        /* ─── Settings Tab ─── */
-        const SettingsTab = () => {
-            const [cleared, setCleared] = useState(false);
-            return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 560 }}>
-                    <div>
-                        <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 24, marginBottom: 4 }}>Settings</h2>
-                        <p style={{ color: 'var(--muted)', fontSize: 14 }}>Manage admin preferences and data</p>
-                    </div>
+        {/* Upload */}
+        {!preview&&!processing&&(
+          <div className="fa1"><Uploader onSelect={onSelect}/></div>
+        )}
 
-                    <div className="card" style={{ overflow: 'visible' }}>
-                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 14 }}>Analytics Data</span>
-                        </div>
-                        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6 }}>
-                                All analytics are stored locally in your browser's localStorage. No data is sent to any server.
-                            </p>
-                            <button
-                                className="btn-ghost"
-                                style={{ alignSelf: 'flex-start', color: cleared ? 'var(--success)' : 'var(--danger)', borderColor: cleared ? 'rgba(52,209,138,0.3)' : 'rgba(255,91,91,0.3)' }}
-                                onClick={() => { localStorage.removeItem('bgrm_analytics'); setCleared(true); setTimeout(() => setCleared(false), 2000); }}
-                            >
-                                {cleared ? <><Check size={14} />Cleared!</> : <><X size={14} />Clear All Data</>}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="card">
-                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 14 }}>About</span>
-                        </div>
-                        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            {[['Version', 'v2.0.0'], ['AI Model', '@imgly/background-removal 1.4.5'], ['Processing', '100% Client-side'], ['Admin Path', '/admin']].map(([k, v]) => (
-                                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <span style={{ fontSize: 13, color: 'var(--muted)' }}>{k}</span>
-                                    <span style={{ fontSize: 13, fontFamily: 'Syne', fontWeight: 600 }}>{v}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+        {/* Processing */}
+        {processing&&(
+          <div className="fa" style={{display:'flex',justifyContent:'center'}}>
+            <div className="card" style={{padding:64,textAlign:'center',maxWidth:460,width:'100%'}}>
+              <div style={{position:'relative',width:140,height:140,margin:'0 auto 32px'}}>
+                <svg className="ring" width="140" height="140">
+                  <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="5"/>
+                  <circle cx="70" cy="70" r="60" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round"
+                    strokeDasharray={`${2*Math.PI*60}`}
+                    strokeDashoffset={`${2*Math.PI*60*(1-visP/100)}`}/>
+                </svg>
+                <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <span style={{fontFamily:"'Instrument Serif',serif",fontSize:40}}>{visP}<span style={{fontSize:20,color:'var(--t3)'}}>%</span></span>
                 </div>
-            );
-        };
+              </div>
+              <div style={{fontFamily:"'Instrument Serif',serif",fontSize:24,marginBottom:8}}>
+                {visP===100?'Finishing up':'Removing background'}
+              </div>
+              <div style={{color:'var(--t3)',fontSize:14}}>AI is working on your image</div>
+              <div style={{marginTop:24,height:2,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden'}}>
+                <div style={{height:'100%',width:`${Math.max(visP,1)}%`,background:'white',borderRadius:99,transition:'width .1s ease'}}/>
+              </div>
+            </div>
+          </div>
+        )}
 
-        /* ─── Mount ─── */
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+        {/* Result */}
+        {preview&&!processing&&(
+          <div className="fa" style={{display:'flex',flexDirection:'column',gap:20}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+              <div style={{display:'flex',gap:6}}>
+                {[['split','Split view'],['single','Result only']].map(([v,l])=>(
+                  <button key={v} className={`btn btn-sm ${viewMode===v?'btn-white':'btn-outline'}`} style={{fontSize:12}} onClick={()=>setViewMode(v)}>{l}</button>
+                ))}
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                {canvas&&<DLBtn canvas={canvas} name={fileName} bg={bg}/>}
+                <button className="btn btn-outline btn-sm" onClick={reset}><RefreshCw size={13}/>New image</button>
+              </div>
+            </div>
+
+            <div style={{display:'grid',gridTemplateColumns:viewMode==='split'?'1fr 1fr':'1fr',gap:16}}>
+              {viewMode==='split'&&(
+                <div className="card" style={{overflow:'hidden'}}>
+                  <div style={{padding:'11px 16px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',gap:8}}>
+                    <Img size={13} color="var(--t3)"/>
+                    <span style={{fontSize:11,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.07em'}}>Original</span>
+                  </div>
+                  <div style={{padding:24,minHeight:360,display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)'}}>
+                    <img src={preview} alt="Original" style={{maxWidth:'100%',maxHeight:480,borderRadius:10,boxShadow:'0 8px 40px rgba(0,0,0,.6)'}}/>
+                  </div>
+                </div>
+              )}
+              <div className="card" style={{border:'1px solid rgba(255,255,255,.1)',overflow:'hidden'}}>
+                <div style={{padding:'11px 16px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',gap:8}}>
+                  <Sparkles size={13} color="white"/>
+                  <span style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.07em'}}>Result</span>
+                </div>
+                <div style={{padding:'11px 16px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                  <span style={{fontSize:11,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.07em',marginRight:4}}>Background</span>
+                  {colors.map(c=>(
+                    <button key={c.v} title={c.v} className={`sw ${bg===c.v?'on':''}`} onClick={()=>setBg(c.v)} style={{background:c.bg||c.v,border:'2px solid rgba(255,255,255,.1)'}}>
+                      {bg===c.v&&c.v!=='transparent'&&<Check size={12} color="white" style={{filter:'drop-shadow(0 1px 2px rgba(0,0,0,.8))'}}/>}
+                    </button>
+                  ))}
+                </div>
+                <div className={bg==='transparent'?'checker':''} style={{padding:24,minHeight:360,display:'flex',alignItems:'center',justifyContent:'center',background:bg!=='transparent'?bg:undefined}}>
+                  {canvas
+                    ?<img src={canvas.toDataURL('image/png')} alt="Result" style={{maxWidth:'100%',maxHeight:480,borderRadius:10,boxShadow:'0 8px 40px rgba(0,0,0,.6)'}}/>
+                    :<div style={{textAlign:'center',color:'var(--t3)'}}><X size={36} style={{margin:'0 auto 8px',opacity:.3,display:'block'}}/><p style={{fontSize:13}}>Processing failed</p></div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {preview&&processing&&<Processor preview={preview} onDone={onDone} onErr={onErr} onP={setRealP}/>}
+      </main>
+    </div>
+  );
+};
+
+const Uploader = ({onSelect}) => {
+  const [drag,setDrag]=useState(false);
+  const ref=useRef(null);
+  const onDrag=e=>{e.preventDefault();setDrag(e.type==='dragenter'||e.type==='dragover');};
+  const onDrop=e=>{e.preventDefault();setDrag(false);if(e.dataTransfer.files[0])proc(e.dataTransfer.files[0]);};
+  const proc=f=>{if(!f.type.match('image.*'))return alert('Please select an image');const r=new FileReader();r.onload=e=>onSelect(f,e.target.result);r.readAsDataURL(f);};
+  return (
+    <div className={`upload-zone ${drag?'drag':''}`} style={{padding:'90px 40px',textAlign:'center'}} onDragEnter={onDrag} onDragLeave={onDrag} onDragOver={onDrag} onDrop={onDrop} onClick={()=>ref.current.click()}>
+      <input type="file" ref={ref} style={{display:'none'}} accept="image/png,image/jpeg,image/webp" onChange={e=>e.target.files[0]&&proc(e.target.files[0])}/>
+      <div style={{width:72,height:72,background:'rgba(255,255,255,.06)',border:'1px solid var(--b2)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 28px'}}>
+        <Upload size={30} color="white" strokeWidth={1.5}/>
+      </div>
+      <p style={{fontSize:18,color:'white',fontWeight:300,marginBottom:4}}>
+        Drop an image here
+      </p>
+      <p style={{fontSize:14,color:'var(--t3)'}}>or <span style={{color:'white',textDecoration:'underline',textUnderlineOffset:3,cursor:'pointer'}}>click to browse</span></p>
+    </div>
+  );
+};
+
+const Processor = ({preview,onDone,onErr,onP}) => {
+  useEffect(()=>{
+    (async()=>{
+      try {
+        const res=await fetch(preview); const blob=await res.blob();
+        const opts={progress:(k,c,t)=>onP(t>0?Math.round(c/t*100):0),debug:false,proxyToWorker:true,model:'medium'};
+        if(!cachedRmBg){onP(1);const{removeBackground}=await import('https://esm.sh/@imgly/background-removal@1.4.5');cachedRmBg=removeBackground;}
+        const out=await cachedRmBg(blob,opts);
+        const bm=await createImageBitmap(out);
+        const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);
+        onDone(c);
+      } catch(e){onErr('Failed to process. '+(e.message||''));}
+    })();
+  },[]);
+  return null;
+};
+
+const DLBtn = ({canvas,name,bg}) => {
+  const dl=()=>{
+    const tmp=document.createElement('canvas');tmp.width=canvas.width;tmp.height=canvas.height;
+    const ctx=tmp.getContext('2d');
+    if(bg!=='transparent'){ctx.fillStyle=bg;ctx.fillRect(0,0,tmp.width,tmp.height);}
+    ctx.drawImage(canvas,0,0);
+    const a=document.createElement('a');a.download=`${name}-nobg.png`;a.href=tmp.toDataURL('image/png');a.click();
+  };
+  return <button className="btn btn-white btn-sm" onClick={dl}><Download size={14}/>Download PNG</button>;
+};
+
+/* ═══ ADMIN SHELL ═══ */
+const AdminShell = ({go}) => {
+  const [authed,setAuthed]=useState(()=>sessionStorage.getItem('bgrm_adm')==='1');
+  if(!authed)return <AdminLogin onAuth={()=>{sessionStorage.setItem('bgrm_adm','1');setAuthed(true);}} go={go}/>;
+  return <AdminPanel go={go} onOut={()=>{sessionStorage.removeItem('bgrm_adm');setAuthed(false);}}/>;
+};
+
+const AdminLogin = ({onAuth,go}) => {
+  const [pw,setPw]=useState('');
+  const [err,setErr]=useState(false);
+  const [shake,setShake]=useState(false);
+  const submit=()=>{if(pw==='Hundkatt'){onAuth();}else{setErr(true);setShake(true);setTimeout(()=>setShake(false),500);}};
+  return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+      <div className={`card fa ${shake?'shake':''}`} style={{width:'100%',maxWidth:360,padding:44}}>
+        <div style={{textAlign:'center',marginBottom:32}}>
+          <div style={{width:50,height:50,background:'rgba(255,255,255,.06)',border:'1px solid var(--b2)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px'}}>
+            <Shield size={22} color="white"/>
+          </div>
+          <h1 style={{fontFamily:"'Instrument Serif',serif",fontSize:26,fontWeight:400,marginBottom:4}}>Admin</h1>
+          <p style={{color:'var(--t3)',fontSize:13}}>BG Remoover</p>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          <div>
+            <label style={{fontSize:11,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.08em',display:'block',marginBottom:7}}>Password</label>
+            <input className="input" type="password" value={pw} onChange={e=>{setPw(e.target.value);setErr(false);}} onKeyDown={e=>e.key==='Enter'&&submit()} placeholder="Enter password" style={{borderColor:err?'rgba(255,79,79,.4)':undefined}} autoFocus/>
+            {err&&<p style={{fontSize:12,color:'var(--red)',marginTop:5}}>Incorrect password.</p>}
+          </div>
+          <button className="btn btn-white" style={{width:'100%'}} onClick={submit}><Lock size={14}/>Sign in</button>
+          <button className="btn btn-outline" style={{width:'100%',justifyContent:'center'}} onClick={()=>go('/')}>← Back</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ═══ ADMIN PANEL ═══ */
+const AdminPanel = ({go,onOut}) => {
+  const [tab,setTab]=useState('dashboard');
+  const [db,setDb]=useState(getDB);
+  const [lastRefresh,setLastRefresh]=useState(Date.now());
+
+  const refresh=()=>{setDb(getDB());setLastRefresh(Date.now());};
+  useEffect(()=>{const t=setInterval(refresh,5000);return()=>clearInterval(t);},[]);
+
+  const tabs=[
+    {id:'dashboard',label:'Dashboard',icon:LayoutDashboard},
+    {id:'visitors',label:'Visitors',icon:Users},
+    {id:'uploads',label:'Uploads',icon:FileImage},
+    {id:'settings',label:'Settings',icon:Settings},
+  ];
+
+  return (
+    <div style={{minHeight:'100vh',display:'grid',gridTemplateColumns:'210px 1fr',gridTemplateRows:'54px 1fr'}}>
+      {/* Topbar */}
+      <div style={{gridColumn:'1/-1',borderBottom:'1px solid var(--b1)',padding:'0 24px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--s1)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontFamily:"'Instrument Serif',serif",fontSize:18}}>BG Remoover</span>
+          <ChevronRight size={13} color="var(--t3)"/>
+          <span style={{fontSize:13,color:'var(--t3)',fontWeight:500}}>Admin</span>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <span className="live-dot pulse-anim"/>
+          <span style={{fontSize:12,color:'var(--t3)',marginRight:10}}>Live</span>
+          <button className="btn btn-outline btn-sm" onClick={()=>go('/')}><Eye size={13}/>View site</button>
+          <button className="btn btn-sm btn-danger" onClick={onOut}><LogOut size={13}/>Logout</button>
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <div style={{borderRight:'1px solid var(--b1)',padding:'18px 10px',background:'var(--s1)',display:'flex',flexDirection:'column',gap:2}}>
+        <div style={{padding:'5px 12px 10px',fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.1em'}}>Navigation</div>
+        {tabs.map(t=>(
+          <div key={t.id} className={`nav-item ${tab===t.id?'active':''}`} onClick={()=>setTab(t.id)}>
+            <t.icon size={15}/>{t.label}
+          </div>
+        ))}
+        <div style={{flex:1}}/>
+        <div style={{padding:'12px',borderTop:'1px solid var(--b1)',fontSize:11,color:'var(--t3)'}}>
+          <div style={{marginBottom:2}}>Refreshed {new Date(lastRefresh).toLocaleTimeString()}</div>
+          <div>Auto-refresh every 5s</div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{overflowY:'auto',padding:32,background:'var(--bg)'}}>
+        {tab==='dashboard'&&<DashTab db={db}/>}
+        {tab==='visitors'&&<VisitorsTab db={db}/>}
+        {tab==='uploads'&&<UploadsTab db={db}/>}
+        {tab==='settings'&&<SettingsTab onClear={()=>{localStorage.removeItem(AK);setDb(defaultData());}}/>}
+      </div>
+    </div>
+  );
+};
+
+/* ═══ HELPERS ═══ */
+const fmtTime=ts=>new Date(ts).toLocaleString();
+const fmtAgo=ts=>{const s=Math.floor((Date.now()-ts)/1000);if(s<60)return`${s}s ago`;if(s<3600)return`${Math.floor(s/60)}m ago`;if(s<86400)return`${Math.floor(s/3600)}h ago`;return`${Math.floor(s/86400)}d ago`;};
+const parseUA=ua=>{if(!ua)return'Unknown';if(/iPhone|iPad/.test(ua))return'iOS';if(/Android/.test(ua))return'Android';if(/Mac/.test(ua))return'macOS';if(/Windows/.test(ua))return'Windows';if(/Linux/.test(ua))return'Linux';return'Other';};
+const parseBrowser=ua=>{if(!ua)return'Unknown';if(/Firefox\//.test(ua))return'Firefox';if(/Edg\//.test(ua))return'Edge';if(/Chrome\//.test(ua))return'Chrome';if(/Safari\//.test(ua))return'Safari';return'Other';};
+const parseRef=ref=>{if(!ref||ref==='direct')return'Direct';try{return new URL(ref).hostname.replace('www.','');}catch{return ref;}};
+const countBy=(arr,fn)=>{const m={};arr.forEach(x=>{const k=fn(x);m[k]=(m[k]||0)+1;});return Object.entries(m).sort((a,b)=>b[1]-a[1]);};
+const last24h=ts=>Date.now()-ts<86400000;
+const last7d=ts=>Date.now()-ts<604800000;
+const last30d=ts=>Date.now()-ts<2592000000;
+
+/* ═══ DASHBOARD ═══ */
+const DashTab = ({db}) => {
+  const vs=db.visitors||[]; const ups=db.uploads||[]; const pvs=db.pageviews||[];
+  const totalV=vs.length;
+  const v24=vs.filter(v=>last24h(v.lastTs)).length;
+  const v7=vs.filter(v=>last7d(v.lastTs)).length;
+  const totalS=vs.reduce((a,v)=>a+(v.sessions||1),0);
+  const totalU=ups.length;
+  const doneU=ups.filter(u=>u.status==='done').length;
+  const rate=totalU>0?Math.round(doneU/totalU*100):0;
+  const withDur=ups.filter(u=>u.dur>0);
+  const avgDur=withDur.length?Math.round(withDur.reduce((a,u)=>a+u.dur,0)/withDur.length):0;
+
+  const last7Days=Array.from({length:7},(_,i)=>{
+    const d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
+    const label=d.toLocaleDateString('en',{weekday:'short'});
+    const uCount=ups.filter(u=>{const d2=new Date(u.ts);d2.setHours(0,0,0,0);return d2.getTime()===d.getTime();}).length;
+    const vCount=vs.filter(v=>{const d2=new Date(v.lastTs);d2.setHours(0,0,0,0);return d2.getTime()===d.getTime();}).length;
+    return{label,uCount,vCount};
+  }).reverse();
+
+  const maxVal=Math.max(...last7Days.map(d=>Math.max(d.uCount,d.vCount)),1);
+  const recent=[...ups].reverse().slice(0,8);
+
+  const stats=[
+    {label:'Total Visitors',value:totalV,sub:`${v24} today · ${v7} this week`,icon:Users},
+    {label:'Total Sessions',value:totalS,sub:`avg ${totalV?Math.round(totalS/totalV*10)/10:0} per visitor`,icon:MousePointer},
+    {label:'Images Processed',value:totalU,sub:`${doneU} successful`,icon:FileImage},
+    {label:'Success Rate',value:`${rate}%`,sub:avgDur?`avg ${avgDur}s processing time`:'no data yet',icon:Activity},
+    {label:'Page Views',value:pvs.length,sub:'all time',icon:Eye},
+  ];
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:28}}>
+      <div>
+        <h2 style={{fontFamily:"'Instrument Serif',serif",fontSize:28,fontWeight:400,marginBottom:4}}>Dashboard</h2>
+        <p style={{color:'var(--t3)',fontSize:14}}>{totalV} unique visitors tracked in this browser</p>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))',gap:14}}>
+        {stats.map((s,i)=>(
+          <div key={i} className="stat fa" style={{animationDelay:`${i*.06}s`}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+              <span style={{fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.07em'}}>{s.label}</span>
+              <s.icon size={14} color="var(--t3)"/>
+            </div>
+            <div style={{fontFamily:"'Instrument Serif',serif",fontSize:36,lineHeight:1,marginBottom:6}}>{s.value}</div>
+            <div style={{fontSize:12,color:'var(--t3)'}}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 7-day chart */}
+      <div className="card">
+        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <span style={{fontSize:13,fontWeight:600}}>Activity — Last 7 Days</span>
+          <div style={{display:'flex',gap:16,fontSize:11,color:'var(--t3)'}}>
+            <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:10,height:3,background:'white',borderRadius:2,display:'inline-block'}}/>Visitors</span>
+            <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:10,height:3,background:'rgba(255,255,255,.3)',borderRadius:2,display:'inline-block'}}/>Uploads</span>
+          </div>
+        </div>
+        <div style={{padding:'24px 24px 16px',display:'flex',alignItems:'flex-end',gap:12,height:200}}>
+          {last7Days.map((d,i)=>(
+            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:6,height:'100%',justifyContent:'flex-end'}}>
+              <div style={{width:'100%',display:'flex',gap:3,alignItems:'flex-end',flex:1,justifyContent:'center'}}>
+                <div title={`${d.vCount} visitors`} style={{width:'42%',height:`${(d.vCount/maxVal)*100}%`,minHeight:d.vCount>0?3:0,background:'white',borderRadius:'3px 3px 0 0',opacity:.85}}/>
+                <div title={`${d.uCount} uploads`} style={{width:'42%',height:`${(d.uCount/maxVal)*100}%`,minHeight:d.uCount>0?3:0,background:'rgba(255,255,255,.3)',borderRadius:'3px 3px 0 0'}}/>
+              </div>
+              <span style={{fontSize:11,color:'var(--t3)'}}>{d.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        <div className="card">
+          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Recent Uploads</span></div>
+          {recent.length===0
+            ?<div style={{padding:32,textAlign:'center',color:'var(--t3)',fontSize:13}}>No uploads yet</div>
+            :recent.map(u=>(
+              <div key={u.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 18px',borderBottom:'1px solid rgba(255,255,255,.025)'}}>
+                <FileImage size={14} color="var(--t3)" style={{flexShrink:0}}/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.name}</div>
+                  <div style={{fontSize:11,color:'var(--t3)',marginTop:1}}>{u.size} KB · {fmtAgo(u.ts)}{u.dur?` · ${u.dur}s`:''}</div>
+                </div>
+                <span className="dot" style={{background:u.status==='done'?'var(--green)':u.status==='error'?'var(--red)':'var(--t3)'}}/>
+              </div>
+          ))}
+        </div>
+        <div className="card">
+          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Traffic Sources</span></div>
+          {vs.length===0
+            ?<div style={{padding:32,textAlign:'center',color:'var(--t3)',fontSize:13}}>No visitor data yet</div>
+            :countBy(vs,v=>parseRef(v.ref)).slice(0,7).map(([ref,cnt])=>{
+              const pct=Math.round(cnt/vs.length*100);
+              return (
+                <div key={ref} style={{padding:'10px 18px',borderBottom:'1px solid rgba(255,255,255,.025)'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:13}}>
+                    <span>{ref}</span><span style={{color:'var(--t3)'}}>{cnt} ({pct}%)</span>
+                  </div>
+                  <div style={{height:2,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden'}}>
+                    <div style={{height:'100%',width:`${pct}%`,background:'rgba(255,255,255,.5)',borderRadius:99}}/>
+                  </div>
+                </div>
+              );
+            })
+          }
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ═══ VISITORS TAB ═══ */
+const VisitorsTab = ({db}) => {
+  const vs=db.visitors||[];
+  const [filter,setFilter]=useState('all');
+  const filtered=useMemo(()=>{
+    if(filter==='24h')return vs.filter(v=>last24h(v.lastTs));
+    if(filter==='7d')return vs.filter(v=>last7d(v.lastTs));
+    if(filter==='30d')return vs.filter(v=>last30d(v.lastTs));
+    return vs;
+  },[vs,filter]);
+  const sorted=[...filtered].sort((a,b)=>b.lastTs-a.lastTs);
+  const platforms=countBy(vs,v=>parseUA(v.ua));
+  const browsers=countBy(vs,v=>parseBrowser(v.ua));
+  const langs=countBy(vs,v=>(v.lang||'?').split('-')[0].toUpperCase()).slice(0,6);
+  const tzs=countBy(vs,v=>v.tz||'Unknown').slice(0,6);
+  const total=vs.length||1;
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:24}}>
+      <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+        <div>
+          <h2 style={{fontFamily:"'Instrument Serif',serif",fontSize:28,fontWeight:400,marginBottom:4}}>Visitors</h2>
+          <p style={{color:'var(--t3)',fontSize:14}}>{vs.length} unique visitors tracked</p>
+        </div>
+        <div style={{display:'flex',gap:6}}>
+          {[['all','All'],['30d','30d'],['7d','7d'],['24h','Today']].map(([v,l])=>(
+            <button key={v} className={`btn btn-sm ${filter===v?'btn-white':'btn-outline'}`} style={{fontSize:12}} onClick={()=>setFilter(v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
+        {[[platforms,'Platforms'],[browsers,'Browsers'],[langs,'Languages']].map(([data,title])=>(
+          <div key={title} className="card">
+            <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>{title}</span></div>
+            <div style={{padding:'8px 0'}}>
+              {data.slice(0,6).map(([k,c])=>{
+                const pct=Math.round(c/total*100);
+                return (
+                  <div key={k} style={{padding:'8px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
+                    <span style={{fontSize:13}}>{k}</span>
+                    <div style={{display:'flex',alignItems:'center',gap:8,flex:1,justifyContent:'flex-end'}}>
+                      <div style={{width:70,height:2,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden'}}>
+                        <div style={{height:'100%',width:`${pct}%`,background:'white',borderRadius:99}}/>
+                      </div>
+                      <span style={{fontSize:12,color:'var(--t3)',width:30,textAlign:'right'}}>{pct}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+              {data.length===0&&<div style={{padding:'16px 18px',fontSize:13,color:'var(--t3)'}}>No data yet</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {tzs.length>0&&(
+        <div className="card">
+          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Timezones</span></div>
+          <div style={{padding:'8px 0',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))'}}>
+            {tzs.map(([tz,c])=>{
+              const pct=Math.round(c/total*100);
+              return (
+                <div key={tz} style={{padding:'10px 18px'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:13}}>
+                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>{tz}</span>
+                    <span style={{color:'var(--t3)',flexShrink:0,marginLeft:8}}>{pct}%</span>
+                  </div>
+                  <div style={{height:2,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden'}}>
+                    <div style={{height:'100%',width:`${pct}%`,background:'rgba(255,255,255,.4)',borderRadius:99}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="card">
+        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <span style={{fontSize:13,fontWeight:600}}>Visitor Log</span>
+          <span style={{fontSize:12,color:'var(--t3)'}}>{filtered.length} records</span>
+        </div>
+        <div className="scroll-x">
+          {sorted.length===0
+            ?<div style={{padding:48,textAlign:'center',color:'var(--t3)',fontSize:13}}>
+              <Users size={36} style={{margin:'0 auto 12px',opacity:.2,display:'block'}}/>
+              No visitors in this range
+            </div>
+            :<table className="tbl" style={{width:'100%',borderCollapse:'collapse'}}>
+              <thead><tr><th>ID</th><th>First seen</th><th>Last seen</th><th>Sessions</th><th>Platform</th><th>Browser</th><th>Language</th><th>Timezone</th><th>Source</th></tr></thead>
+              <tbody>
+                {sorted.map(v=>(
+                  <tr key={v.id}>
+                    <td><code style={{fontSize:10,color:'var(--t3)',background:'rgba(255,255,255,.04)',padding:'2px 6px',borderRadius:4}}>{v.id}</code></td>
+                    <td style={{color:'var(--t3)',fontSize:12,whiteSpace:'nowrap'}}>{fmtTime(v.firstTs)}</td>
+                    <td style={{fontSize:12,whiteSpace:'nowrap'}}>{fmtAgo(v.lastTs)}</td>
+                    <td style={{textAlign:'center'}}>{v.sessions||1}</td>
+                    <td style={{fontSize:12}}>{parseUA(v.ua)}</td>
+                    <td style={{fontSize:12}}>{parseBrowser(v.ua)}</td>
+                    <td style={{fontSize:12}}>{(v.lang||'?').split('-')[0].toUpperCase()}</td>
+                    <td style={{fontSize:11,color:'var(--t3)',maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{v.tz||'—'}</td>
+                    <td style={{color:'var(--t3)',fontSize:12}}>{parseRef(v.ref)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ═══ UPLOADS TAB ═══ */
+const UploadsTab = ({db}) => {
+  const ups=[...(db.uploads||[])].reverse();
+  const done=ups.filter(u=>u.status==='done').length;
+  const errs=ups.filter(u=>u.status==='error').length;
+  const withDur=ups.filter(u=>u.dur>0);
+  const avgDur=withDur.length?Math.round(withDur.reduce((a,u)=>a+u.dur,0)/withDur.length):0;
+  const totalKB=ups.reduce((a,u)=>a+(u.size||0),0);
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:24}}>
+      <div>
+        <h2 style={{fontFamily:"'Instrument Serif',serif",fontSize:28,fontWeight:400,marginBottom:4}}>Uploads</h2>
+        <p style={{color:'var(--t3)',fontSize:14}}>{ups.length} images processed total</p>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14}}>
+        {[['Total',ups.length,''],['Successful',done,'var(--green)'],['Failed',errs,'var(--red)'],['Avg Time',avgDur?`${avgDur}s`:'—','']].map(([l,v,c])=>(
+          <div key={l} className="stat">
+            <div style={{fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:10}}>{l}</div>
+            <div style={{fontFamily:"'Instrument Serif',serif",fontSize:32,color:c||'inherit'}}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Upload Log</span></div>
+        {ups.length===0
+          ?<div style={{padding:48,textAlign:'center',color:'var(--t3)',fontSize:13}}>
+            <FileImage size={36} style={{margin:'0 auto 12px',opacity:.2,display:'block'}}/>
+            No uploads yet
+          </div>
+          :<div className="scroll-x">
+            <table className="tbl" style={{width:'100%',borderCollapse:'collapse'}}>
+              <thead><tr><th>File</th><th>Size</th><th>Time</th><th>Duration</th><th>Status</th></tr></thead>
+              <tbody>
+                {ups.map(u=>(
+                  <tr key={u.id}>
+                    <td>
+                      <div style={{display:'flex',alignItems:'center',gap:10}}>
+                        <div style={{width:28,height:28,background:'rgba(255,255,255,.04)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                          <FileImage size={12} color="var(--t3)"/>
+                        </div>
+                        <span style={{maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.name}</span>
+                      </div>
+                    </td>
+                    <td style={{color:'var(--t3)'}}>{u.size} KB</td>
+                    <td style={{color:'var(--t3)',fontSize:12,whiteSpace:'nowrap'}}>{fmtTime(u.ts)}</td>
+                    <td style={{color:'var(--t3)'}}>{u.dur?`${u.dur}s`:'—'}</td>
+                    <td>
+                      <span className="tag" style={{background:u.status==='done'?'rgba(61,220,132,.1)':u.status==='error'?'rgba(255,79,79,.1)':'rgba(255,255,255,.05)',color:u.status==='done'?'var(--green)':u.status==='error'?'var(--red)':'var(--t3)'}}>
+                        <span className="dot" style={{background:u.status==='done'?'var(--green)':u.status==='error'?'var(--red)':'var(--t3)',width:6,height:6}}/>
+                        {u.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  );
+};
+
+/* ═══ SETTINGS TAB ═══ */
+const SettingsTab = ({onClear}) => {
+  const [cleared,setCleared]=useState(false);
+  const clear=()=>{onClear();setCleared(true);setTimeout(()=>setCleared(false),2500);};
+  const db=getDB();
+  const dbSize=new Blob([JSON.stringify(db)]).size;
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:24,maxWidth:500}}>
+      <div>
+        <h2 style={{fontFamily:"'Instrument Serif',serif",fontSize:28,fontWeight:400,marginBottom:4}}>Settings</h2>
+        <p style={{color:'var(--t3)',fontSize:14}}>Manage data and preferences</p>
+      </div>
+      <div className="card">
+        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Analytics Storage</span></div>
+        <div style={{padding:20,display:'flex',flexDirection:'column',gap:16}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            {[['Visitors',(db.visitors||[]).length],['Uploads',(db.uploads||[]).length],['Page Views',(db.pageviews||[]).length],['Storage',`${Math.round(dbSize/1024)} KB`]].map(([k,v])=>(
+              <div key={k} style={{background:'var(--s2)',borderRadius:10,padding:'12px 16px',border:'1px solid var(--b1)'}}>
+                <div style={{fontSize:10,color:'var(--t3)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.07em',marginBottom:6}}>{k}</div>
+                <div style={{fontFamily:"'Instrument Serif',serif",fontSize:24}}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{color:'var(--t3)',fontSize:13,lineHeight:1.7}}>All data lives in your browser's localStorage. Nothing is sent to any server.</p>
+          <button className={`btn ${cleared?'btn-outline':'btn-danger'}`} style={{alignSelf:'flex-start',gap:8}} onClick={clear}>
+            {cleared?<><Check size={14}/>Cleared!</>:<><Trash2 size={14}/>Clear all data</>}
+          </button>
+        </div>
+      </div>
+      <div className="card">
+        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>App Info</span></div>
+        <div style={{padding:'4px 0'}}>
+          {[['Version','v2.0'],['AI Model','@imgly/background-removal 1.4.5'],['Admin path','/admin'],['Data store','Browser localStorage']].map(([k,v])=>(
+            <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'10px 18px',borderBottom:'1px solid rgba(255,255,255,.025)',fontSize:13}}>
+              <span style={{color:'var(--t3)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
 </body>
 </html>
