@@ -7,129 +7,280 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22><path d=%22m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z%22/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#080808;
-  --s1:#0f0f0f;
-  --s2:#161616;
-  --s3:#1e1e1e;
-  --b1:rgba(255,255,255,0.06);
-  --b2:rgba(255,255,255,0.10);
-  --b3:rgba(255,255,255,0.16);
-  --t1:#ffffff;
-  --t2:rgba(255,255,255,0.6);
-  --t3:rgba(255,255,255,0.35);
-  --green:#3ddc84;
-  --red:#ff4f4f;
-  --blue:#4f9fff;
+  --bg:#07060d;
+  --s1:#0e0c1a;
+  --s2:#141228;
+  --s3:#1c1932;
+  --b1:rgba(255,255,255,0.07);
+  --b2:rgba(255,255,255,0.12);
+  --b3:rgba(255,255,255,0.20);
+  --t1:#f0eeff;
+  --t2:rgba(240,238,255,0.55);
+  --t3:rgba(240,238,255,0.28);
+  --v1:#c084fc; /* violet */
+  --v2:#818cf8; /* indigo */
+  --v3:#38bdf8; /* sky */
+  --em:#f0abfc; /* pink */
+  --green:#34d399;
+  --red:#f87171;
+  --amber:#fbbf24;
 }
-body{background:var(--bg);color:var(--t1);font-family:'Geist',sans-serif;overflow-x:hidden}
-.serif{font-family:'Instrument Serif',serif}
+html,body{height:100%}
+body{background:var(--bg);color:var(--t1);font-family:'Geist',sans-serif;overflow-x:hidden;line-height:1.5}
+.serif{font-family:'Fraunces',serif}
+
+/* Noise */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E")}
+
+/* Scrollbar */
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
-body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:10px;font-family:'Geist',sans-serif;font-weight:500;font-size:14px;cursor:pointer;transition:all .15s ease}
-.btn-white{background:#fff;color:#000;padding:12px 28px}
-.btn-white:hover{background:#e8e8e8;transform:translateY(-1px)}
-.btn-white:disabled{opacity:.3;cursor:not-allowed;transform:none}
-.btn-outline{background:transparent;color:var(--t2);border:1px solid var(--b2);padding:11px 24px}
-.btn-outline:hover{background:var(--s2);color:var(--t1);border-color:var(--b3)}
-.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
-.btn-danger{background:rgba(255,79,79,.1);color:var(--red);border:1px solid rgba(255,79,79,.2);padding:9px 18px;font-size:13px}
-.btn-danger:hover{background:rgba(255,79,79,.15)}
-.card{background:var(--s1);border:1px solid var(--b1);border-radius:16px;overflow:hidden}
-.card:hover{border-color:var(--b2);transition:border-color .2s}
-.input{background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:11px 15px;color:var(--t1);font-family:'Geist',sans-serif;font-size:14px;width:100%;outline:none;transition:border-color .15s}
-.input:focus{border-color:rgba(255,255,255,.25)}
-.input::placeholder{color:var(--t3)}
-.checker{background-image:linear-gradient(45deg,#1c1c1c 25%,transparent 25%),linear-gradient(-45deg,#1c1c1c 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1c1c1c 75%),linear-gradient(-45deg,transparent 75%,#1c1c1c 75%);background-size:14px 14px;background-position:0 0,0 7px,7px -7px,-7px 0;background-color:#141414}
-.upload-zone{border:1px solid var(--b2);border-radius:20px;transition:all .2s ease;cursor:pointer;background:var(--s1)}
-.upload-zone:hover,.upload-zone.drag{border-color:rgba(255,255,255,.3);background:var(--s2)}
+::-webkit-scrollbar-thumb:hover{background:#2e2a4a}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:12px;font-family:'Geist',sans-serif;font-weight:500;font-size:14px;cursor:pointer;transition:all .18s ease;white-space:nowrap}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
+
+.btn-glow{
+  background:linear-gradient(135deg,var(--v1),var(--v2));
+  color:#fff;padding:13px 30px;
+  box-shadow:0 0 30px rgba(192,132,252,.25);
+}
+.btn-glow:hover{transform:translateY(-1px);box-shadow:0 0 50px rgba(192,132,252,.4);filter:brightness(1.08)}
+
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--t2);border:1px solid var(--b1);padding:10px 20px}
+.btn-ghost:hover{background:rgba(255,255,255,.09);color:var(--t1);border-color:var(--b2)}
+
+.btn-sm{padding:8px 16px;font-size:12px;border-radius:9px}
+.btn-danger{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2);padding:9px 18px;font-size:13px}
+.btn-danger:hover{background:rgba(248,113,113,.18)}
+
+/* ── Cards ── */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:18px;overflow:hidden;transition:border-color .2s}
+.card:hover{border-color:var(--b2)}
+
+.card-glow{
+  background:linear-gradient(135deg,rgba(192,132,252,.06),rgba(129,140,248,.04));
+  border:1px solid rgba(192,132,252,.2);
+  border-radius:18px;overflow:hidden;
+  box-shadow:0 0 60px rgba(192,132,252,.05);
+}
+
+/* ── Upload zone ── */
+.upload-zone{
+  border:1.5px dashed rgba(192,132,252,.3);border-radius:24px;
+  transition:all .25s ease;cursor:pointer;
+  background:linear-gradient(135deg,rgba(192,132,252,.03),rgba(129,140,248,.02));
+  position:relative;overflow:hidden;
+}
+.upload-zone::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(192,132,252,.08),transparent 60%);
+  pointer-events:none;
+}
+.upload-zone:hover,.upload-zone.drag{
+  border-color:rgba(192,132,252,.7);
+  background:linear-gradient(135deg,rgba(192,132,252,.07),rgba(129,140,248,.05));
+}
 .upload-zone.drag{transform:scale(1.005)}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.fa{animation:fadeUp .4s ease both}
-.fa1{animation:fadeUp .4s .08s ease both}
-.fa2{animation:fadeUp .4s .16s ease both}
-.shake{animation:shake .4s ease}
-.spin{animation:spin 1s linear infinite}
-.pulse-anim{animation:pulse 2s ease infinite}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;transition:all .15s;user-select:none}
-.nav-item:hover{background:var(--s2);color:var(--t2)}
-.nav-item.active{background:var(--s2);color:var(--t1)}
-.stat{background:var(--s2);border:1px solid var(--b1);border-radius:14px;padding:22px;transition:all .15s}
-.stat:hover{border-color:var(--b2);transform:translateY(-1px)}
-.tbl th{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);padding:10px 16px;border-bottom:1px solid var(--b1);text-align:left}
-.tbl td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.025);vertical-align:middle}
+
+/* ── Checker ── */
+.checker{
+  background-image:linear-gradient(45deg,#151220 25%,transparent 25%),
+    linear-gradient(-45deg,#151220 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#151220 75%),
+    linear-gradient(-45deg,transparent 75%,#151220 75%);
+  background-size:16px 16px;
+  background-position:0 0,0 8px,8px -8px,-8px 0;
+  background-color:#0d0b1c;
+}
+
+/* ── Color swatch ── */
+.sw{width:30px;height:30px;border-radius:50%;cursor:pointer;transition:all .15s;border:2px solid rgba(255,255,255,.1);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sw:hover{transform:scale(1.18);border-color:rgba(255,255,255,.3)}
+.sw.on{border-color:white;transform:scale(1.18);box-shadow:0 0 0 3px rgba(192,132,252,.35)}
+
+/* ── Input ── */
+.input{background:var(--s2);border:1px solid var(--b1);border-radius:11px;padding:12px 16px;color:var(--t1);font-family:'Geist',sans-serif;font-size:14px;width:100%;outline:none;transition:border-color .15s}
+.input:focus{border-color:rgba(192,132,252,.5);box-shadow:0 0 0 3px rgba(192,132,252,.08)}
+.input::placeholder{color:var(--t3)}
+
+/* ── Progress ring ── */
+.ring circle{transition:stroke-dashoffset .1s linear;transform:rotate(-90deg);transform-origin:50% 50%}
+
+/* ── Nav ── */
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;transition:all .15s;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--t2)}
+.nav-item.active{background:rgba(192,132,252,.12);color:var(--v1)}
+
+/* ── Stat card ── */
+.stat{background:var(--s2);border:1px solid var(--b1);border-radius:14px;padding:20px;transition:all .15s}
+.stat:hover{border-color:var(--b2);transform:translateY(-2px)}
+
+/* ── Table ── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);padding:10px 16px;border-bottom:1px solid var(--b1);text-align:left;white-space:nowrap}
+.tbl td{padding:11px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:rgba(255,255,255,.015)}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ── Misc ── */
 .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
 .tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.04em}
-.sw{width:28px;height:28px;border-radius:50%;cursor:pointer;transition:all .15s;border:2px solid transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.sw:hover{transform:scale(1.15)}
-.sw.on{border-color:rgba(255,255,255,.7);transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.2)}
-.ring circle{transition:stroke-dashoffset .1s linear;transform:rotate(-90deg);transform-origin:50% 50%}
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite}
+.divider{border:none;border-top:1px solid var(--b1)}
 .scroll-x{overflow-x:auto}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+.fa{animation:fadeUp .45s ease both}
+.fa1{animation:fadeUp .45s .1s ease both}
+.fa2{animation:fadeUp .45s .2s ease both}
+.fa3{animation:fadeUp .45s .3s ease both}
+.fa4{animation:fadeUp .45s .4s ease both}
+.shake{animation:shake .4s ease}
+.spin-anim{animation:spin 1.2s linear infinite}
+.pulse-anim{animation:pulse 2s ease infinite}
+.float{animation:float 4s ease-in-out infinite}
+
+/* ── Gradient text ── */
+.gtext{background:linear-gradient(135deg,var(--v1),var(--v2),var(--v3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.gtext-warm{background:linear-gradient(135deg,#f9a8d4,var(--v1),var(--v2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* ── Glowing orbs ── */
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+
+/* ── Feature pill ── */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--b1);font-size:12px;color:var(--t2)}
+
+/* ── Upload icon ring ── */
+.icon-ring{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(192,132,252,.15),rgba(129,140,248,.1));
+  border:1.5px solid rgba(192,132,252,.3);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto;
+  box-shadow:0 0 40px rgba(192,132,252,.15);
+}
+
+/* ── Result badge ── */
+.result-badge{
+  position:absolute;top:14px;right:14px;z-index:10;
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:999px;
+  background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.25);
+  color:var(--green);font-size:11px;font-weight:600;letter-spacing:.05em;
+}
 </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="root" style="position:relative;z-index:1;min-height:100vh"></div>
 <script type="text/babel" data-type="module">
-import { Upload, Download, Sparkles, X, Image as Img, RefreshCw, Check, Lock, LayoutDashboard, Settings, LogOut, Activity, Clock, Globe, TrendingUp, BarChart2, AlertCircle, Shield, Eye, ChevronRight, Users, MousePointer, Timer, FileImage, Trash2 } from 'https://esm.sh/lucide-react@0.344.0';
-const { useState, useEffect, useCallback, useRef, useMemo } = React;
+import {
+  Upload,Download,Sparkles,X,Image as ImgIcon,RefreshCw,Check,
+  Lock,LayoutDashboard,Settings,LogOut,Activity,Eye,
+  Shield,ChevronRight,Users,MousePointer,FileImage,Trash2,
+  Zap,Star,Clock,Globe,TrendingUp,ArrowUpRight,BarChart3,
+  Cpu,Layers,Timer,AlertCircle,Hash
+} from 'https://esm.sh/lucide-react@0.344.0';
 
-/* ═══ ANALYTICS ═══ */
-const AK = 'bgrm_v2';
-const defaultData = () => ({ visitors:[], uploads:[], pageviews:[] });
-const getDB = () => { try { const r=localStorage.getItem(AK); return r?JSON.parse(r):defaultData(); } catch { return defaultData(); } };
-const saveDB = db => { try { localStorage.setItem(AK,JSON.stringify(db)); } catch {} };
-const getOrCreateVid = () => { const k='bgrm_vid'; let id=localStorage.getItem(k); if(!id){id=Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem(k,id);} return id; };
+const {useState,useEffect,useCallback,useRef,useMemo}=React;
 
-const trackVisit = () => {
-  const db=getDB(); const vid=getOrCreateVid(); const ts=Date.now();
+/* ════════════════════════════════
+   ANALYTICS ENGINE
+════════════════════════════════ */
+const AK='bgrm_v3';
+const defaultData=()=>({visitors:[],uploads:[],pageviews:[]});
+const getDB=()=>{try{const r=localStorage.getItem(AK);return r?JSON.parse(r):defaultData();}catch{return defaultData();}};
+const saveDB=db=>{try{localStorage.setItem(AK,JSON.stringify(db));}catch{}};
+const getOrCreateVid=()=>{const k='bgrm_vid';let id=localStorage.getItem(k);if(!id){id=Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem(k,id);}return id;};
+
+const trackVisit=()=>{
+  const db=getDB();const vid=getOrCreateVid();const ts=Date.now();
   const ex=db.visitors.find(v=>v.id===vid);
-  const isNew=!ex||(ts-(ex.lastTs||0))>1800000;
-  if(!ex){db.visitors.push({id:vid,firstTs:ts,lastTs:ts,sessions:1,lang:navigator.language||'?',tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'?',w:window.innerWidth,h:window.innerHeight,ref:document.referrer||'direct',ua:navigator.userAgent});}
-  else{ex.lastTs=ts;if(isNew)ex.sessions=(ex.sessions||1)+1;}
+  const isNewSession=!ex||(ts-(ex.lastTs||0))>1800000;
+  if(!ex){
+    db.visitors.push({id:vid,firstTs:ts,lastTs:ts,sessions:1,
+      lang:navigator.language||'unknown',
+      tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'unknown',
+      w:window.screen.width,h:window.screen.height,
+      vw:window.innerWidth,vh:window.innerHeight,
+      ref:document.referrer||'direct',
+      ua:navigator.userAgent,
+    });
+  } else {
+    ex.lastTs=ts;
+    if(isNewSession)ex.sessions=(ex.sessions||1)+1;
+  }
   db.pageviews.push({ts,path:location.pathname,vid});
-  db.visitors=db.visitors.slice(-2000); db.pageviews=db.pageviews.slice(-5000);
+  db.visitors=db.visitors.slice(-3000);
+  db.pageviews=db.pageviews.slice(-10000);
   saveDB(db);
 };
 
-const trackUpload = (name,size) => { const db=getDB(); const id=Date.now(); db.uploads.push({id,ts:Date.now(),name,size:Math.round(size/1024),status:'processing',dur:null}); db.uploads=db.uploads.slice(-500); saveDB(db); return id; };
-const finishUpload = (id,ok,dur) => { const db=getDB(); const u=db.uploads.find(x=>x.id===id); if(u){u.status=ok?'done':'error';u.dur=dur;} saveDB(db); };
-
-/* ═══ ROUTING ═══ */
-const useRoute = () => {
-  const [path,setPath]=useState(location.pathname);
-  useEffect(()=>{ const h=()=>setPath(location.pathname); window.addEventListener('popstate',h); return()=>window.removeEventListener('popstate',h); },[]);
-  const go = to => { history.pushState({},''  ,to); setPath(to); };
-  return {path,go};
+const trackUpload=(name,size,type)=>{
+  const db=getDB();const id=Date.now();
+  db.uploads.push({id,ts:Date.now(),name,size:Math.round(size/1024),type:type||'unknown',status:'processing',dur:null,vid:getOrCreateVid()});
+  db.uploads=db.uploads.slice(-1000);
+  saveDB(db);
+  return id;
 };
 
-/* ═══ AI CACHE ═══ */
+const finishUpload=(id,ok,dur)=>{
+  const db=getDB();const u=db.uploads.find(x=>x.id===id);
+  if(u){u.status=ok?'done':'error';u.dur=dur;}
+  saveDB(db);
+};
+
+/* ════════════════════════════════
+   ROUTING
+════════════════════════════════ */
+const useRoute=()=>{
+  const [path,setPath]=useState(location.pathname);
+  useEffect(()=>{
+    const h=()=>setPath(location.pathname);
+    window.addEventListener('popstate',h);
+    return()=>window.removeEventListener('popstate',h);
+  },[]);
+  const go=to=>{history.pushState({},'',to);setPath(to);};
+  return{path,go};
+};
+
+/* ════════════════════════════════
+   AI MODEL CACHE
+════════════════════════════════ */
 let cachedRmBg=null;
 
-/* ═══ ROOT ═══ */
-const App = () => {
-  const {path,go}=useRoute();
-  useEffect(()=>{ trackVisit(); },[]);
-  if(path.startsWith('/admin')) return <AdminShell go={go}/>;
+/* ════════════════════════════════
+   ROOT
+════════════════════════════════ */
+const App=()=>{
+  const{path,go}=useRoute();
+  useEffect(()=>{trackVisit();},[]);
+  if(path.startsWith('/admin'))return <AdminShell go={go}/>;
   return <MainApp go={go}/>;
 };
 
-/* ═══ MAIN APP ═══ */
-const MainApp = ({go}) => {
+/* ════════════════════════════════
+   MAIN APP
+════════════════════════════════ */
+const MainApp=({go})=>{
   const [preview,setPreview]=useState(null);
   const [canvas,setCanvas]=useState(null);
   const [processing,setProcessing]=useState(false);
@@ -143,13 +294,17 @@ const MainApp = ({go}) => {
   const [viewMode,setViewMode]=useState('split');
 
   useEffect(()=>{
-    if(visP<realP){ const t=setInterval(()=>setVisP(p=>p<realP?Math.min(p+2,realP):p),12); return()=>clearInterval(t); }
+    if(visP<realP){
+      const t=setInterval(()=>setVisP(p=>p<realP?Math.min(p+2,realP):p),12);
+      return()=>clearInterval(t);
+    }
   },[realP,visP]);
 
   const onSelect=useCallback((file,prev)=>{
     setFileName(file.name.replace(/\.[^.]+$/,''));
     setPreview(prev);setCanvas(null);setProcessing(true);setErr(null);setRealP(0);setVisP(0);
-    const id=trackUpload(file.name,file.size); setUploadId(id); setStartTs(Date.now());
+    const id=trackUpload(file.name,file.size,file.type);
+    setUploadId(id);setStartTs(Date.now());
   },[]);
 
   const onDone=useCallback(c=>{
@@ -167,71 +322,123 @@ const MainApp = ({go}) => {
   const reset=()=>{setPreview(null);setCanvas(null);setErr(null);setRealP(0);setVisP(0);};
 
   const colors=[
-    {v:'transparent',bg:'repeating-conic-gradient(#222 0% 25%,#111 0% 50%) 0 0/10px 10px'},
-    {v:'#ffffff'},{v:'#000000'},{v:'#0a0a0a'},{v:'#1a1a2e'},{v:'#0f3460'},
-    {v:'#e94560'},{v:'#f97316'},{v:'#fbbf24'},{v:'#22c55e'},{v:'#06b6d4'},{v:'#a855f7'},
+    {v:'transparent',bg:'repeating-conic-gradient(#1a1530 0% 25%,#100e1e 0% 50%) 0 0/12px 12px',label:'None'},
+    {v:'#ffffff',label:'White'},{v:'#000000',label:'Black'},
+    {v:'#0f0f0f',label:'Near Black'},{v:'#111827',label:'Gray 900'},
+    {v:'#1e1b4b',label:'Indigo 950'},{v:'#1a0030',label:'Deep Violet'},
+    {v:'#0c1a2e',label:'Navy'},{v:'#064e3b',label:'Emerald'},
+    {v:'#7c3aed',label:'Violet'},{v:'#db2777',label:'Pink'},
+    {v:'#ea580c',label:'Orange'},{v:'#ca8a04',label:'Gold'},
+    {v:'#0284c7',label:'Blue'},{v:'#0d9488',label:'Teal'},
+    {v:'#e7e5e4',label:'Stone'},{v:'#fdf4ff',label:'Lavender White'},
   ];
 
   return (
-    <div style={{minHeight:'100vh',display:'flex',flexDirection:'column'}}>
-      <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0}}>
-        <div style={{position:'absolute',width:700,height:700,background:'radial-gradient(circle,rgba(255,255,255,0.022) 0%,transparent 70%)',top:'-15%',left:'25%',borderRadius:'50%'}}/>
-      </div>
+    <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',position:'relative'}}>
+      {/* Ambient orbs */}
+      <div className="orb" style={{width:600,height:600,background:'radial-gradient(circle,rgba(192,132,252,.12) 0%,transparent 70%)',top:'-100px',left:'10%'}}/>
+      <div className="orb" style={{width:500,height:500,background:'radial-gradient(circle,rgba(129,140,248,.09) 0%,transparent 70%)',top:'100px',right:'5%'}}/>
+      <div className="orb" style={{width:400,height:400,background:'radial-gradient(circle,rgba(56,189,248,.06) 0%,transparent 70%)',bottom:'0',left:'30%'}}/>
 
       {/* Header */}
-      <header style={{position:'relative',zIndex:1,padding:'20px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid var(--b1)'}}>
-        <span style={{fontFamily:"'Instrument Serif',serif",fontSize:22,letterSpacing:'-0.01em'}}>BG Remoover</span>
+      <header style={{position:'relative',zIndex:2,padding:'22px 52px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid var(--b1)',backdropFilter:'blur(12px)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:30,height:30,borderRadius:8,background:'linear-gradient(135deg,var(--v1),var(--v2))',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 0 18px rgba(192,132,252,.35)'}}>
+            <Sparkles size={15} color="white"/>
+          </div>
+          <span style={{fontFamily:"'Fraunces',serif",fontSize:20,fontWeight:400,letterSpacing:'-0.02em',color:'var(--t1)'}}>BG Remoover</span>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <span style={{fontSize:12,color:'var(--t3)',fontWeight:500}}>v2</span>
+        </div>
       </header>
 
-      <main style={{flex:1,position:'relative',zIndex:1,padding:'72px 48px',maxWidth:1100,margin:'0 auto',width:'100%'}}>
+      <main style={{flex:1,position:'relative',zIndex:2,padding:'80px 52px',maxWidth:1140,margin:'0 auto',width:'100%'}}>
 
-        {/* Hero */}
+        {/* HERO — only on upload screen */}
         {!preview&&!processing&&(
-          <div style={{textAlign:'center',marginBottom:60}} className="fa">
-            <h1 style={{fontFamily:"'Instrument Serif',serif",fontSize:'clamp(52px,7vw,96px)',lineHeight:1.02,letterSpacing:'-0.03em',marginBottom:0,fontWeight:400,color:'white'}}>
-              Remove any background.
-            </h1>
-          </div>
+          <>
+            <div className="fa" style={{textAlign:'center',marginBottom:18}}>
+              <div className="pill" style={{display:'inline-flex',marginBottom:28,borderColor:'rgba(192,132,252,.2)',background:'rgba(192,132,252,.06)'}}>
+                <Zap size={12} color="var(--v1)"/>
+                <span style={{color:'var(--v1)'}}>AI-powered · runs entirely in your browser</span>
+              </div>
+              <h1 style={{fontFamily:"'Fraunces',serif",fontSize:'clamp(52px,6.5vw,90px)',lineHeight:1.0,letterSpacing:'-0.03em',fontWeight:400,marginBottom:0}}>
+                Remove any<br/>
+                <span className="gtext" style={{fontStyle:'italic'}}>background</span>
+                , instantly.
+              </h1>
+            </div>
+
+            <div className="fa1">
+              <Uploader onSelect={onSelect}/>
+            </div>
+
+            {/* Feature row */}
+            <div className="fa2" style={{display:'flex',justifyContent:'center',gap:12,marginTop:28,flexWrap:'wrap'}}>
+              {[
+                [Zap,'Instant processing'],
+                [Shield,'Fully private'],
+                [Layers,'PNG + transparency'],
+                [Cpu,'On-device AI'],
+              ].map(([Icon,t])=>(
+                <div key={t} className="pill">
+                  <Icon size={11} color="var(--v1)"/>
+                  <span>{t}</span>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Error */}
         {err&&(
-          <div className="card fa" style={{borderColor:'rgba(255,79,79,.25)',background:'rgba(255,79,79,.05)',padding:16,display:'flex',alignItems:'center',gap:14,marginBottom:28}}>
-            <AlertCircle size={17} color="var(--red)" style={{flexShrink:0}}/>
+          <div className="fa" style={{background:'rgba(248,113,113,.06)',border:'1px solid rgba(248,113,113,.2)',borderRadius:14,padding:'14px 18px',display:'flex',alignItems:'center',gap:14,marginBottom:24}}>
+            <AlertCircle size={16} color="var(--red)" style={{flexShrink:0}}/>
             <div style={{flex:1}}>
-              <div style={{fontSize:13,fontWeight:600,color:'#ff8080',marginBottom:2}}>Processing failed</div>
-              <div style={{fontSize:12,color:'rgba(255,128,128,.5)'}}>{err}</div>
+              <div style={{fontSize:13,fontWeight:600,color:'#fca5a5',marginBottom:2}}>Processing failed</div>
+              <div style={{fontSize:12,color:'rgba(252,165,165,.5)'}}>{err}</div>
             </div>
-            <button onClick={()=>setErr(null)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--t3)',padding:4}}><X size={15}/></button>
+            <button onClick={()=>setErr(null)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--t3)',padding:4}}><X size={14}/></button>
           </div>
-        )}
-
-        {/* Upload */}
-        {!preview&&!processing&&(
-          <div className="fa1"><Uploader onSelect={onSelect}/></div>
         )}
 
         {/* Processing */}
         {processing&&(
           <div className="fa" style={{display:'flex',justifyContent:'center'}}>
-            <div className="card" style={{padding:64,textAlign:'center',maxWidth:460,width:'100%'}}>
-              <div style={{position:'relative',width:140,height:140,margin:'0 auto 32px'}}>
-                <svg className="ring" width="140" height="140">
-                  <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="5"/>
-                  <circle cx="70" cy="70" r="60" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round"
-                    strokeDasharray={`${2*Math.PI*60}`}
-                    strokeDashoffset={`${2*Math.PI*60*(1-visP/100)}`}/>
+            <div className="card-glow" style={{padding:'60px 48px',textAlign:'center',maxWidth:460,width:'100%'}}>
+              {/* Progress ring — NO track circle, just the fill */}
+              <div style={{position:'relative',width:150,height:150,margin:'0 auto 32px'}}>
+                <svg width="150" height="150" style={{transform:'rotate(-90deg)'}}>
+                  <defs>
+                    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="var(--v1)"/>
+                      <stop offset="50%" stopColor="var(--v2)"/>
+                      <stop offset="100%" stopColor="var(--v3)"/>
+                    </linearGradient>
+                  </defs>
+                  {/* Track — subtle, blended */}
+                  <circle cx="75" cy="75" r="64" fill="none" stroke="rgba(192,132,252,0.08)" strokeWidth="6"/>
+                  {/* Progress arc */}
+                  <circle
+                    cx="75" cy="75" r="64" fill="none"
+                    stroke="url(#ringGrad)" strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2*Math.PI*64}`}
+                    strokeDashoffset={`${2*Math.PI*64*(1-visP/100)}`}
+                    style={{transition:'stroke-dashoffset .12s linear'}}
+                  />
                 </svg>
-                <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <span style={{fontFamily:"'Instrument Serif',serif",fontSize:40}}>{visP}<span style={{fontSize:20,color:'var(--t3)'}}>%</span></span>
+                <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+                  <span style={{fontFamily:"'Fraunces',serif",fontSize:42,lineHeight:1,letterSpacing:'-0.03em'}}>{visP}<span style={{fontSize:22,color:'var(--t3)'}}>%</span></span>
                 </div>
               </div>
-              <div style={{fontFamily:"'Instrument Serif',serif",fontSize:24,marginBottom:8}}>
-                {visP===100?'Finishing up':'Removing background'}
+              <div style={{fontFamily:"'Fraunces',serif",fontSize:24,marginBottom:10,fontWeight:400}}>
+                {visP===100?'Finishing up…':'Removing background'}
               </div>
-              <div style={{color:'var(--t3)',fontSize:14}}>AI is working on your image</div>
-              <div style={{marginTop:24,height:2,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden'}}>
-                <div style={{height:'100%',width:`${Math.max(visP,1)}%`,background:'white',borderRadius:99,transition:'width .1s ease'}}/>
+              <div style={{color:'var(--t3)',fontSize:14}}>AI is analyzing your image locally</div>
+              <div style={{marginTop:24,height:3,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden'}}>
+                <div style={{height:'100%',width:`${Math.max(visP,1)}%`,background:'linear-gradient(90deg,var(--v1),var(--v2),var(--v3))',borderRadius:99,transition:'width .12s ease'}}/>
               </div>
             </div>
           </div>
@@ -239,16 +446,16 @@ const MainApp = ({go}) => {
 
         {/* Result */}
         {preview&&!processing&&(
-          <div className="fa" style={{display:'flex',flexDirection:'column',gap:20}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+          <div className="fa" style={{display:'flex',flexDirection:'column',gap:18}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
               <div style={{display:'flex',gap:6}}>
                 {[['split','Split view'],['single','Result only']].map(([v,l])=>(
-                  <button key={v} className={`btn btn-sm ${viewMode===v?'btn-white':'btn-outline'}`} style={{fontSize:12}} onClick={()=>setViewMode(v)}>{l}</button>
+                  <button key={v} className={`btn btn-sm ${viewMode===v?'btn-glow':'btn-ghost'}`} style={{fontSize:12}} onClick={()=>setViewMode(v)}>{l}</button>
                 ))}
               </div>
               <div style={{display:'flex',gap:8}}>
                 {canvas&&<DLBtn canvas={canvas} name={fileName} bg={bg}/>}
-                <button className="btn btn-outline btn-sm" onClick={reset}><RefreshCw size={13}/>New image</button>
+                <button className="btn btn-ghost btn-sm" onClick={reset}><RefreshCw size={13}/>New image</button>
               </div>
             </div>
 
@@ -256,31 +463,45 @@ const MainApp = ({go}) => {
               {viewMode==='split'&&(
                 <div className="card" style={{overflow:'hidden'}}>
                   <div style={{padding:'11px 16px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',gap:8}}>
-                    <Img size={13} color="var(--t3)"/>
+                    <ImgIcon size={13} color="var(--t3)"/>
                     <span style={{fontSize:11,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.07em'}}>Original</span>
                   </div>
                   <div style={{padding:24,minHeight:360,display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)'}}>
-                    <img src={preview} alt="Original" style={{maxWidth:'100%',maxHeight:480,borderRadius:10,boxShadow:'0 8px 40px rgba(0,0,0,.6)'}}/>
+                    <img src={preview} alt="Original" style={{maxWidth:'100%',maxHeight:500,borderRadius:12,boxShadow:'0 12px 50px rgba(0,0,0,.6)'}}/>
                   </div>
                 </div>
               )}
-              <div className="card" style={{border:'1px solid rgba(255,255,255,.1)',overflow:'hidden'}}>
-                <div style={{padding:'11px 16px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',gap:8}}>
-                  <Sparkles size={13} color="white"/>
-                  <span style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.07em'}}>Result</span>
+
+              <div className="card-glow" style={{position:'relative'}}>
+                <div style={{padding:'11px 16px',borderBottom:'1px solid rgba(192,132,252,.15)',display:'flex',alignItems:'center',gap:8}}>
+                  <Sparkles size={13} color="var(--v1)"/>
+                  <span style={{fontSize:11,fontWeight:600,color:'var(--v1)',textTransform:'uppercase',letterSpacing:'.07em'}}>Result</span>
+                  {canvas&&(
+                    <div className="result-badge">
+                      <Check size={10}/>DONE
+                    </div>
+                  )}
                 </div>
-                <div style={{padding:'11px 16px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                  <span style={{fontSize:11,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.07em',marginRight:4}}>Background</span>
+
+                {/* Background color picker */}
+                <div style={{padding:'12px 16px',borderBottom:'1px solid rgba(192,132,252,.1)',display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                  <span style={{fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.08em',marginRight:4,flexShrink:0}}>BG Color</span>
                   {colors.map(c=>(
-                    <button key={c.v} title={c.v} className={`sw ${bg===c.v?'on':''}`} onClick={()=>setBg(c.v)} style={{background:c.bg||c.v,border:'2px solid rgba(255,255,255,.1)'}}>
-                      {bg===c.v&&c.v!=='transparent'&&<Check size={12} color="white" style={{filter:'drop-shadow(0 1px 2px rgba(0,0,0,.8))'}}/>}
+                    <button key={c.v} title={c.label} className={`sw ${bg===c.v?'on':''}`}
+                      onClick={()=>setBg(c.v)}
+                      style={{background:c.bg||c.v}}>
+                      {bg===c.v&&c.v!=='transparent'&&<Check size={12} color="white" style={{filter:'drop-shadow(0 1px 3px rgba(0,0,0,1))'}}/>}
                     </button>
                   ))}
                 </div>
-                <div className={bg==='transparent'?'checker':''} style={{padding:24,minHeight:360,display:'flex',alignItems:'center',justifyContent:'center',background:bg!=='transparent'?bg:undefined}}>
+
+                <div
+                  className={bg==='transparent'?'checker':''}
+                  style={{padding:24,minHeight:360,display:'flex',alignItems:'center',justifyContent:'center',background:bg!=='transparent'?bg:undefined,transition:'background .2s ease'}}
+                >
                   {canvas
-                    ?<img src={canvas.toDataURL('image/png')} alt="Result" style={{maxWidth:'100%',maxHeight:480,borderRadius:10,boxShadow:'0 8px 40px rgba(0,0,0,.6)'}}/>
-                    :<div style={{textAlign:'center',color:'var(--t3)'}}><X size={36} style={{margin:'0 auto 8px',opacity:.3,display:'block'}}/><p style={{fontSize:13}}>Processing failed</p></div>
+                    ?<img src={canvas.toDataURL('image/png')} alt="Result" style={{maxWidth:'100%',maxHeight:500,borderRadius:12,boxShadow:'0 12px 50px rgba(0,0,0,.5)'}}/>
+                    :<div style={{textAlign:'center',color:'var(--t3)'}}><X size={40} style={{margin:'0 auto 10px',opacity:.3,display:'block'}}/><p style={{fontSize:13}}>Processing failed</p></div>
                   }
                 </div>
               </div>
@@ -290,48 +511,67 @@ const MainApp = ({go}) => {
 
         {preview&&processing&&<Processor preview={preview} onDone={onDone} onErr={onErr} onP={setRealP}/>}
       </main>
+
+      {/* Footer */}
+      {!preview&&!processing&&(
+        <footer style={{position:'relative',zIndex:2,padding:'20px 52px',borderTop:'1px solid var(--b1)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <span style={{fontSize:11,color:'var(--t3)'}}>© 2025 BG Remoover</span>
+        </footer>
+      )}
     </div>
   );
 };
 
-const Uploader = ({onSelect}) => {
+/* ── Uploader ── */
+const Uploader=({onSelect})=>{
   const [drag,setDrag]=useState(false);
   const ref=useRef(null);
   const onDrag=e=>{e.preventDefault();setDrag(e.type==='dragenter'||e.type==='dragover');};
   const onDrop=e=>{e.preventDefault();setDrag(false);if(e.dataTransfer.files[0])proc(e.dataTransfer.files[0]);};
-  const proc=f=>{if(!f.type.match('image.*'))return alert('Please select an image');const r=new FileReader();r.onload=e=>onSelect(f,e.target.result);r.readAsDataURL(f);};
+  const proc=f=>{
+    if(!f.type.match('image.*'))return alert('Please select an image');
+    const r=new FileReader();
+    r.onload=e=>onSelect(f,e.target.result);
+    r.readAsDataURL(f);
+  };
   return (
-    <div className={`upload-zone ${drag?'drag':''}`} style={{padding:'90px 40px',textAlign:'center'}} onDragEnter={onDrag} onDragLeave={onDrag} onDragOver={onDrag} onDrop={onDrop} onClick={()=>ref.current.click()}>
+    <div className={`upload-zone ${drag?'drag':''}`}
+      style={{padding:'80px 48px',textAlign:'center'}}
+      onDragEnter={onDrag} onDragLeave={onDrag} onDragOver={onDrag} onDrop={onDrop}
+      onClick={()=>ref.current.click()}>
       <input type="file" ref={ref} style={{display:'none'}} accept="image/png,image/jpeg,image/webp" onChange={e=>e.target.files[0]&&proc(e.target.files[0])}/>
-      <div style={{width:72,height:72,background:'rgba(255,255,255,.06)',border:'1px solid var(--b2)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 28px'}}>
-        <Upload size={30} color="white" strokeWidth={1.5}/>
+      <div className="icon-ring" style={{marginBottom:26}}>
+        <Upload size={32} color="var(--v1)" strokeWidth={1.5}/>
       </div>
-      <p style={{fontSize:18,color:'white',fontWeight:300,marginBottom:4}}>
-        Drop an image here
-      </p>
-      <p style={{fontSize:14,color:'var(--t3)'}}>or <span style={{color:'white',textDecoration:'underline',textUnderlineOffset:3,cursor:'pointer'}}>click to browse</span></p>
+      <h3 style={{fontFamily:"'Fraunces',serif",fontSize:26,fontWeight:400,marginBottom:8,letterSpacing:'-0.02em'}}>
+        Drop your image here
+      </h3>
+      <p style={{fontSize:14,color:'var(--t2)'}}>or <span style={{color:'var(--v1)',textDecoration:'underline',textUnderlineOffset:3,cursor:'pointer'}}>click to browse</span></p>
+      <p style={{fontSize:12,color:'var(--t3)',marginTop:10}}>Supports PNG, JPG, WebP</p>
     </div>
   );
 };
 
-const Processor = ({preview,onDone,onErr,onP}) => {
+/* ── AI Processor ── */
+const Processor=({preview,onDone,onErr,onP})=>{
   useEffect(()=>{
     (async()=>{
-      try {
-        const res=await fetch(preview); const blob=await res.blob();
+      try{
+        const res=await fetch(preview);const blob=await res.blob();
         const opts={progress:(k,c,t)=>onP(t>0?Math.round(c/t*100):0),debug:false,proxyToWorker:true,model:'medium'};
         if(!cachedRmBg){onP(1);const{removeBackground}=await import('https://esm.sh/@imgly/background-removal@1.4.5');cachedRmBg=removeBackground;}
         const out=await cachedRmBg(blob,opts);
         const bm=await createImageBitmap(out);
         const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);
         onDone(c);
-      } catch(e){onErr('Failed to process. '+(e.message||''));}
+      }catch(e){onErr('Failed to process. '+(e.message||''));}
     })();
   },[]);
   return null;
 };
 
-const DLBtn = ({canvas,name,bg}) => {
+/* ── Download Button ── */
+const DLBtn=({canvas,name,bg})=>{
   const dl=()=>{
     const tmp=document.createElement('canvas');tmp.width=canvas.width;tmp.height=canvas.height;
     const ctx=tmp.getContext('2d');
@@ -339,52 +579,57 @@ const DLBtn = ({canvas,name,bg}) => {
     ctx.drawImage(canvas,0,0);
     const a=document.createElement('a');a.download=`${name}-nobg.png`;a.href=tmp.toDataURL('image/png');a.click();
   };
-  return <button className="btn btn-white btn-sm" onClick={dl}><Download size={14}/>Download PNG</button>;
+  return <button className="btn btn-glow btn-sm" onClick={dl}><Download size={14}/>Download PNG</button>;
 };
 
-/* ═══ ADMIN SHELL ═══ */
-const AdminShell = ({go}) => {
+/* ════════════════════════════════
+   ADMIN SHELL
+════════════════════════════════ */
+const AdminShell=({go})=>{
   const [authed,setAuthed]=useState(()=>sessionStorage.getItem('bgrm_adm')==='1');
   if(!authed)return <AdminLogin onAuth={()=>{sessionStorage.setItem('bgrm_adm','1');setAuthed(true);}} go={go}/>;
   return <AdminPanel go={go} onOut={()=>{sessionStorage.removeItem('bgrm_adm');setAuthed(false);}}/>;
 };
 
-const AdminLogin = ({onAuth,go}) => {
+const AdminLogin=({onAuth,go})=>{
   const [pw,setPw]=useState('');
   const [err,setErr]=useState(false);
   const [shake,setShake]=useState(false);
-  const submit=()=>{if(pw==='Hundkatt'){onAuth();}else{setErr(true);setShake(true);setTimeout(()=>setShake(false),500);}};
+  const submit=()=>{if(pw==='Hundkatt'){onAuth();}else{setErr(true);setShake(true);setTimeout(()=>setShake(false),450);}};
   return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-      <div className={`card fa ${shake?'shake':''}`} style={{width:'100%',maxWidth:360,padding:44}}>
-        <div style={{textAlign:'center',marginBottom:32}}>
-          <div style={{width:50,height:50,background:'rgba(255,255,255,.06)',border:'1px solid var(--b2)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px'}}>
-            <Shield size={22} color="white"/>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:'var(--bg)'}}>
+      <div className="orb" style={{width:500,height:500,background:'radial-gradient(circle,rgba(192,132,252,.08) 0%,transparent 70%)',top:'20%',left:'25%'}}/>
+      <div className={`card-glow fa ${shake?'shake':''}`} style={{width:'100%',maxWidth:380,padding:44,position:'relative',zIndex:1}}>
+        <div style={{textAlign:'center',marginBottom:30}}>
+          <div style={{width:52,height:52,background:'linear-gradient(135deg,rgba(192,132,252,.2),rgba(129,140,248,.1))',border:'1px solid rgba(192,132,252,.3)',borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px',boxShadow:'0 0 30px rgba(192,132,252,.15)'}}>
+            <Shield size={24} color="var(--v1)"/>
           </div>
-          <h1 style={{fontFamily:"'Instrument Serif',serif",fontSize:26,fontWeight:400,marginBottom:4}}>Admin</h1>
-          <p style={{color:'var(--t3)',fontSize:13}}>BG Remoover</p>
+          <h1 style={{fontFamily:"'Fraunces',serif",fontSize:26,fontWeight:400,marginBottom:4}}>Admin access</h1>
+          <p style={{color:'var(--t3)',fontSize:13}}>BG Remoover control panel</p>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
           <div>
             <label style={{fontSize:11,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.08em',display:'block',marginBottom:7}}>Password</label>
-            <input className="input" type="password" value={pw} onChange={e=>{setPw(e.target.value);setErr(false);}} onKeyDown={e=>e.key==='Enter'&&submit()} placeholder="Enter password" style={{borderColor:err?'rgba(255,79,79,.4)':undefined}} autoFocus/>
+            <input className="input" type="password" value={pw} onChange={e=>{setPw(e.target.value);setErr(false);}} onKeyDown={e=>e.key==='Enter'&&submit()} placeholder="Enter password" style={{borderColor:err?'rgba(248,113,113,.4)':undefined}} autoFocus/>
             {err&&<p style={{fontSize:12,color:'var(--red)',marginTop:5}}>Incorrect password.</p>}
           </div>
-          <button className="btn btn-white" style={{width:'100%'}} onClick={submit}><Lock size={14}/>Sign in</button>
-          <button className="btn btn-outline" style={{width:'100%',justifyContent:'center'}} onClick={()=>go('/')}>← Back</button>
+          <button className="btn btn-glow" style={{width:'100%'}} onClick={submit}><Lock size={14}/>Sign in</button>
+          <button className="btn btn-ghost" style={{width:'100%'}} onClick={()=>go('/')}>← Back to app</button>
         </div>
       </div>
     </div>
   );
 };
 
-/* ═══ ADMIN PANEL ═══ */
-const AdminPanel = ({go,onOut}) => {
+/* ════════════════════════════════
+   ADMIN PANEL
+════════════════════════════════ */
+const AdminPanel=({go,onOut})=>{
   const [tab,setTab]=useState('dashboard');
   const [db,setDb]=useState(getDB);
-  const [lastRefresh,setLastRefresh]=useState(Date.now());
+  const [refreshed,setRefreshed]=useState(Date.now());
 
-  const refresh=()=>{setDb(getDB());setLastRefresh(Date.now());};
+  const refresh=()=>{setDb(getDB());setRefreshed(Date.now());};
   useEffect(()=>{const t=setInterval(refresh,5000);return()=>clearInterval(t);},[]);
 
   const tabs=[
@@ -395,38 +640,38 @@ const AdminPanel = ({go,onOut}) => {
   ];
 
   return (
-    <div style={{minHeight:'100vh',display:'grid',gridTemplateColumns:'210px 1fr',gridTemplateRows:'54px 1fr'}}>
+    <div style={{minHeight:'100vh',display:'grid',gridTemplateColumns:'220px 1fr',gridTemplateRows:'54px 1fr'}}>
       {/* Topbar */}
-      <div style={{gridColumn:'1/-1',borderBottom:'1px solid var(--b1)',padding:'0 24px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--s1)'}}>
+      <div style={{gridColumn:'1/-1',borderBottom:'1px solid var(--b1)',padding:'0 24px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--s1)',position:'sticky',top:0,zIndex:10}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <span style={{fontFamily:"'Instrument Serif',serif",fontSize:18}}>BG Remoover</span>
+          <div style={{width:26,height:26,borderRadius:7,background:'linear-gradient(135deg,var(--v1),var(--v2))',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <Sparkles size={13} color="white"/>
+          </div>
+          <span style={{fontFamily:"'Fraunces',serif",fontSize:17,fontWeight:400}}>BG Remoover</span>
           <ChevronRight size={13} color="var(--t3)"/>
           <span style={{fontSize:13,color:'var(--t3)',fontWeight:500}}>Admin</span>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <span className="live-dot pulse-anim"/>
-          <span style={{fontSize:12,color:'var(--t3)',marginRight:10}}>Live</span>
-          <button className="btn btn-outline btn-sm" onClick={()=>go('/')}><Eye size={13}/>View site</button>
-          <button className="btn btn-sm btn-danger" onClick={onOut}><LogOut size={13}/>Logout</button>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <span className="live-dot pulse-anim"/>
+            <span style={{fontSize:12,color:'var(--t3)'}}>Live · refreshed {new Date(refreshed).toLocaleTimeString()}</span>
+          </div>
+          <button className="btn btn-ghost btn-sm" onClick={()=>go('/')}><Eye size={13}/>View site</button>
+          <button className="btn btn-danger btn-sm" onClick={onOut}><LogOut size={13}/>Logout</button>
         </div>
       </div>
 
       {/* Sidebar */}
-      <div style={{borderRight:'1px solid var(--b1)',padding:'18px 10px',background:'var(--s1)',display:'flex',flexDirection:'column',gap:2}}>
-        <div style={{padding:'5px 12px 10px',fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.1em'}}>Navigation</div>
+      <div style={{borderRight:'1px solid var(--b1)',padding:'18px 10px',background:'var(--s1)',display:'flex',flexDirection:'column',gap:3,position:'sticky',top:54,height:'calc(100vh - 54px)',overflowY:'auto'}}>
+        <div style={{padding:'6px 12px 10px',fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.1em'}}>Navigation</div>
         {tabs.map(t=>(
           <div key={t.id} className={`nav-item ${tab===t.id?'active':''}`} onClick={()=>setTab(t.id)}>
             <t.icon size={15}/>{t.label}
           </div>
         ))}
-        <div style={{flex:1}}/>
-        <div style={{padding:'12px',borderTop:'1px solid var(--b1)',fontSize:11,color:'var(--t3)'}}>
-          <div style={{marginBottom:2}}>Refreshed {new Date(lastRefresh).toLocaleTimeString()}</div>
-          <div>Auto-refresh every 5s</div>
-        </div>
       </div>
 
-      {/* Content */}
+      {/* Main */}
       <div style={{overflowY:'auto',padding:32,background:'var(--bg)'}}>
         {tab==='dashboard'&&<DashTab db={db}/>}
         {tab==='visitors'&&<VisitorsTab db={db}/>}
@@ -437,84 +682,192 @@ const AdminPanel = ({go,onOut}) => {
   );
 };
 
-/* ═══ HELPERS ═══ */
-const fmtTime=ts=>new Date(ts).toLocaleString();
-const fmtAgo=ts=>{const s=Math.floor((Date.now()-ts)/1000);if(s<60)return`${s}s ago`;if(s<3600)return`${Math.floor(s/60)}m ago`;if(s<86400)return`${Math.floor(s/3600)}h ago`;return`${Math.floor(s/86400)}d ago`;};
-const parseUA=ua=>{if(!ua)return'Unknown';if(/iPhone|iPad/.test(ua))return'iOS';if(/Android/.test(ua))return'Android';if(/Mac/.test(ua))return'macOS';if(/Windows/.test(ua))return'Windows';if(/Linux/.test(ua))return'Linux';return'Other';};
-const parseBrowser=ua=>{if(!ua)return'Unknown';if(/Firefox\//.test(ua))return'Firefox';if(/Edg\//.test(ua))return'Edge';if(/Chrome\//.test(ua))return'Chrome';if(/Safari\//.test(ua))return'Safari';return'Other';};
-const parseRef=ref=>{if(!ref||ref==='direct')return'Direct';try{return new URL(ref).hostname.replace('www.','');}catch{return ref;}};
-const countBy=(arr,fn)=>{const m={};arr.forEach(x=>{const k=fn(x);m[k]=(m[k]||0)+1;});return Object.entries(m).sort((a,b)=>b[1]-a[1]);};
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
+const fmtTime=ts=>{
+  const d=new Date(ts);
+  return d.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+};
+const fmtAgo=ts=>{
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60)return`${s}s ago`;
+  if(s<3600)return`${Math.floor(s/60)}m ago`;
+  if(s<86400)return`${Math.floor(s/3600)}h ago`;
+  return`${Math.floor(s/86400)}d ago`;
+};
+const parseUA=ua=>{
+  if(!ua)return'Unknown';
+  if(/iPhone/.test(ua))return'iPhone';
+  if(/iPad/.test(ua))return'iPad';
+  if(/Android/.test(ua))return'Android';
+  if(/Mac OS X/.test(ua)&&!/iPhone|iPad/.test(ua))return'macOS';
+  if(/Windows NT/.test(ua))return'Windows';
+  if(/Linux/.test(ua))return'Linux';
+  return'Other';
+};
+const parseBrowser=ua=>{
+  if(!ua)return'Unknown';
+  if(/Firefox\//.test(ua)&&!/Seamonkey\//.test(ua))return'Firefox';
+  if(/Edg\//.test(ua))return'Edge';
+  if(/OPR\/|Opera\//.test(ua))return'Opera';
+  if(/Chrome\//.test(ua)&&!/Chromium\//.test(ua))return'Chrome';
+  if(/Safari\//.test(ua)&&!/Chrome\/|Chromium\//.test(ua))return'Safari';
+  if(/Chromium\//.test(ua))return'Chromium';
+  return'Other';
+};
+const parseRef=ref=>{
+  if(!ref||ref==='direct')return'Direct';
+  try{const h=new URL(ref).hostname.replace('www.','');return h||'Direct';}
+  catch{return ref.slice(0,30)||'Direct';}
+};
+const countBy=(arr,fn)=>{
+  const m={};
+  arr.forEach(x=>{const k=fn(x)||'Unknown';m[k]=(m[k]||0)+1;});
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+};
 const last24h=ts=>Date.now()-ts<86400000;
 const last7d=ts=>Date.now()-ts<604800000;
 const last30d=ts=>Date.now()-ts<2592000000;
 
-/* ═══ DASHBOARD ═══ */
-const DashTab = ({db}) => {
-  const vs=db.visitors||[]; const ups=db.uploads||[]; const pvs=db.pageviews||[];
-  const totalV=vs.length;
-  const v24=vs.filter(v=>last24h(v.lastTs)).length;
-  const v7=vs.filter(v=>last7d(v.lastTs)).length;
-  const totalS=vs.reduce((a,v)=>a+(v.sessions||1),0);
-  const totalU=ups.length;
-  const doneU=ups.filter(u=>u.status==='done').length;
-  const rate=totalU>0?Math.round(doneU/totalU*100):0;
-  const withDur=ups.filter(u=>u.dur>0);
-  const avgDur=withDur.length?Math.round(withDur.reduce((a,u)=>a+u.dur,0)/withDur.length):0;
+/* ── Section heading ── */
+const SH=({title,sub})=>(
+  <div style={{marginBottom:24}}>
+    <h2 style={{fontFamily:"'Fraunces',serif",fontSize:26,fontWeight:400,marginBottom:4}}>{title}</h2>
+    {sub&&<p style={{color:'var(--t3)',fontSize:13}}>{sub}</p>}
+  </div>
+);
 
+/* ── Stat card ── */
+const StatCard=({label,value,sub,icon:Icon,accent,delay=0})=>(
+  <div className="stat fa" style={{animationDelay:`${delay}s`}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+      <span style={{fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.08em'}}>{label}</span>
+      {Icon&&<div style={{width:28,height:28,borderRadius:8,background:accent?`${accent}18`:'rgba(255,255,255,.06)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <Icon size={13} color={accent||'var(--t3)'}/>
+      </div>}
+    </div>
+    <div style={{fontFamily:"'Fraunces',serif",fontSize:34,lineHeight:1,marginBottom:6,color:accent||'var(--t1)'}}>{value}</div>
+    {sub&&<div style={{fontSize:12,color:'var(--t3)'}}>{sub}</div>}
+  </div>
+);
+
+/* ── Bar row ── */
+const BarRow=({label,count,total,color})=>{
+  const pct=total>0?Math.round(count/total*100):0;
+  return (
+    <div style={{padding:'9px 18px',display:'flex',alignItems:'center',gap:12}}>
+      <span style={{fontSize:13,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</span>
+      <div style={{width:100,height:3,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden',flexShrink:0}}>
+        <div style={{height:'100%',width:`${pct}%`,background:color||'rgba(192,132,252,.7)',borderRadius:99,transition:'width .4s ease'}}/>
+      </div>
+      <span style={{fontSize:12,color:'var(--t3)',width:42,textAlign:'right',flexShrink:0}}>{count} <span style={{opacity:.5}}>({pct}%)</span></span>
+    </div>
+  );
+};
+
+/* ════════════════════════════════
+   DASHBOARD TAB
+════════════════════════════════ */
+const DashTab=({db})=>{
+  const vs=db.visitors||[];
+  const ups=db.uploads||[];
+  const pvs=db.pageviews||[];
+
+  /* ── Core metrics ── */
+  const totalVisitors=vs.length;
+  const newToday=vs.filter(v=>last24h(v.firstTs)).length;        // first visit today
+  const activeToday=vs.filter(v=>last24h(v.lastTs)).length;      // seen today (any session)
+  const active7d=vs.filter(v=>last7d(v.lastTs)).length;
+  const totalSessions=vs.reduce((a,v)=>a+(v.sessions||1),0);
+  const avgSessionsPerVisitor=totalVisitors>0?(totalSessions/totalVisitors).toFixed(1):'—';
+  const totalPV=pvs.length;
+  const pv24=pvs.filter(p=>last24h(p.ts)).length;
+
+  /* ── Upload metrics ── */
+  const totalUploads=ups.length;
+  const doneUploads=ups.filter(u=>u.status==='done').length;
+  const errorUploads=ups.filter(u=>u.status==='error').length;
+  const processingUploads=ups.filter(u=>u.status==='processing').length;
+  const successRate=totalUploads>0?Math.round(doneUploads/totalUploads*100):null;
+  const withDur=ups.filter(u=>u.dur>0&&u.dur<600); // ignore outliers >10min
+  const avgDur=withDur.length>0?Math.round(withDur.reduce((a,u)=>a+u.dur,0)/withDur.length):null;
+  const minDur=withDur.length>0?Math.min(...withDur.map(u=>u.dur)):null;
+  const maxDur=withDur.length>0?Math.max(...withDur.map(u=>u.dur)):null;
+  const totalKB=ups.reduce((a,u)=>a+(u.size||0),0);
+  const avgKB=totalUploads>0?Math.round(totalKB/totalUploads):0;
+
+  /* Unique uploaders */
+  const uniqueUploaderIds=new Set(ups.map(u=>u.vid).filter(Boolean));
+  const uniqueUploaders=uniqueUploaderIds.size;
+  const uploadsPerUser=uniqueUploaders>0?(totalUploads/uniqueUploaders).toFixed(1):'—';
+
+  /* ── 7-day buckets ── */
   const last7Days=Array.from({length:7},(_,i)=>{
     const d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
+    const ts=d.getTime();const tsEnd=ts+86399999;
     const label=d.toLocaleDateString('en',{weekday:'short'});
-    const uCount=ups.filter(u=>{const d2=new Date(u.ts);d2.setHours(0,0,0,0);return d2.getTime()===d.getTime();}).length;
-    const vCount=vs.filter(v=>{const d2=new Date(v.lastTs);d2.setHours(0,0,0,0);return d2.getTime()===d.getTime();}).length;
-    return{label,uCount,vCount};
+    const uCount=ups.filter(u=>u.ts>=ts&&u.ts<=tsEnd).length;
+    const vCount=vs.filter(v=>v.lastTs>=ts&&v.lastTs<=tsEnd).length;
+    const pvCount=pvs.filter(p=>p.ts>=ts&&p.ts<=tsEnd).length;
+    return{label,uCount,vCount,pvCount};
   }).reverse();
+  const maxChart=Math.max(...last7Days.flatMap(d=>[d.uCount,d.vCount]),1);
 
-  const maxVal=Math.max(...last7Days.map(d=>Math.max(d.uCount,d.vCount)),1);
-  const recent=[...ups].reverse().slice(0,8);
-
-  const stats=[
-    {label:'Total Visitors',value:totalV,sub:`${v24} today · ${v7} this week`,icon:Users},
-    {label:'Total Sessions',value:totalS,sub:`avg ${totalV?Math.round(totalS/totalV*10)/10:0} per visitor`,icon:MousePointer},
-    {label:'Images Processed',value:totalU,sub:`${doneU} successful`,icon:FileImage},
-    {label:'Success Rate',value:`${rate}%`,sub:avgDur?`avg ${avgDur}s processing time`:'no data yet',icon:Activity},
-    {label:'Page Views',value:pvs.length,sub:'all time',icon:Eye},
-  ];
+  const recent=[...ups].sort((a,b)=>b.ts-a.ts).slice(0,8);
+  const refs=countBy(vs,v=>parseRef(v.ref));
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:28}}>
+      <SH title="Dashboard" sub={`${totalVisitors} unique visitors · ${totalUploads} images processed`}/>
+
+      {/* Visitor stats */}
       <div>
-        <h2 style={{fontFamily:"'Instrument Serif',serif",fontSize:28,fontWeight:400,marginBottom:4}}>Dashboard</h2>
-        <p style={{color:'var(--t3)',fontSize:14}}>{totalV} unique visitors tracked in this browser</p>
+        <div style={{fontSize:11,fontWeight:600,color:'var(--v1)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:12}}>Visitors</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12}}>
+          <StatCard label="Total Visitors" value={totalVisitors} sub="all time" icon={Users} accent="var(--v1)" delay={0}/>
+          <StatCard label="New Today" value={newToday} sub="first-time visitors" icon={Star} accent="var(--v2)" delay={.06}/>
+          <StatCard label="Active Today" value={activeToday} sub="any session today" icon={Activity} delay={.12}/>
+          <StatCard label="Active 7 Days" value={active7d} icon={TrendingUp} delay={.18}/>
+          <StatCard label="Total Sessions" value={totalSessions} sub={`avg ${avgSessionsPerVisitor}/visitor`} icon={MousePointer} delay={.24}/>
+          <StatCard label="Page Views" value={totalPV} sub={`${pv24} today`} icon={Eye} delay={.30}/>
+        </div>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))',gap:14}}>
-        {stats.map((s,i)=>(
-          <div key={i} className="stat fa" style={{animationDelay:`${i*.06}s`}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-              <span style={{fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.07em'}}>{s.label}</span>
-              <s.icon size={14} color="var(--t3)"/>
-            </div>
-            <div style={{fontFamily:"'Instrument Serif',serif",fontSize:36,lineHeight:1,marginBottom:6}}>{s.value}</div>
-            <div style={{fontSize:12,color:'var(--t3)'}}>{s.sub}</div>
-          </div>
-        ))}
+      {/* Upload stats */}
+      <div>
+        <div style={{fontSize:11,fontWeight:600,color:'var(--v3)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:12}}>Uploads</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12}}>
+          <StatCard label="Total Processed" value={totalUploads} icon={FileImage} accent="var(--v3)" delay={0}/>
+          <StatCard label="Successful" value={doneUploads} sub={successRate!==null?`${successRate}% success rate`:''} icon={Check} accent="var(--green)" delay={.06}/>
+          <StatCard label="Failed" value={errorUploads} sub={processingUploads>0?`${processingUploads} still processing`:''} icon={AlertCircle} accent={errorUploads>0?'var(--red)':undefined} delay={.12}/>
+          <StatCard label="Avg Process Time" value={avgDur!==null?`${avgDur}s`:'—'} sub={minDur&&maxDur?`${minDur}s–${maxDur}s range`:''} icon={Timer} delay={.18}/>
+          <StatCard label="Unique Uploaders" value={uniqueUploaders} sub={`${uploadsPerUser} uploads/user`} icon={Users} delay={.24}/>
+          <StatCard label="Total Data" value={totalKB>1024?`${(totalKB/1024).toFixed(1)} MB`:`${totalKB} KB`} sub={`avg ${avgKB} KB/image`} icon={Layers} delay={.30}/>
+        </div>
       </div>
 
-      {/* 7-day chart */}
+      {/* Chart */}
       <div className="card">
-        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{padding:'14px 20px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <span style={{fontSize:13,fontWeight:600}}>Activity — Last 7 Days</span>
           <div style={{display:'flex',gap:16,fontSize:11,color:'var(--t3)'}}>
-            <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:10,height:3,background:'white',borderRadius:2,display:'inline-block'}}/>Visitors</span>
-            <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:10,height:3,background:'rgba(255,255,255,.3)',borderRadius:2,display:'inline-block'}}/>Uploads</span>
+            <span style={{display:'flex',alignItems:'center',gap:5}}>
+              <span style={{width:10,height:3,background:'var(--v1)',borderRadius:2,display:'inline-block',opacity:.8}}/>Visitors
+            </span>
+            <span style={{display:'flex',alignItems:'center',gap:5}}>
+              <span style={{width:10,height:3,background:'var(--v3)',borderRadius:2,display:'inline-block',opacity:.8}}/>Uploads
+            </span>
           </div>
         </div>
-        <div style={{padding:'24px 24px 16px',display:'flex',alignItems:'flex-end',gap:12,height:200}}>
+        <div style={{padding:'24px 20px 16px',display:'flex',alignItems:'flex-end',gap:10,height:200}}>
           {last7Days.map((d,i)=>(
-            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:6,height:'100%',justifyContent:'flex-end'}}>
+            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:5,height:'100%',justifyContent:'flex-end'}}>
               <div style={{width:'100%',display:'flex',gap:3,alignItems:'flex-end',flex:1,justifyContent:'center'}}>
-                <div title={`${d.vCount} visitors`} style={{width:'42%',height:`${(d.vCount/maxVal)*100}%`,minHeight:d.vCount>0?3:0,background:'white',borderRadius:'3px 3px 0 0',opacity:.85}}/>
-                <div title={`${d.uCount} uploads`} style={{width:'42%',height:`${(d.uCount/maxVal)*100}%`,minHeight:d.uCount>0?3:0,background:'rgba(255,255,255,.3)',borderRadius:'3px 3px 0 0'}}/>
+                <div title={`${d.vCount} visitors`}
+                  style={{width:'44%',height:`${(d.vCount/maxChart)*100}%`,minHeight:d.vCount>0?3:0,background:'var(--v1)',borderRadius:'3px 3px 0 0',opacity:.7,transition:'height .3s ease'}}/>
+                <div title={`${d.uCount} uploads`}
+                  style={{width:'44%',height:`${(d.uCount/maxChart)*100}%`,minHeight:d.uCount>0?3:0,background:'var(--v3)',borderRadius:'3px 3px 0 0',opacity:.7,transition:'height .3s ease'}}/>
               </div>
               <span style={{fontSize:11,color:'var(--t3)'}}>{d.label}</span>
             </div>
@@ -522,128 +875,129 @@ const DashTab = ({db}) => {
         </div>
       </div>
 
+      {/* Bottom row */}
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
         <div className="card">
           <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Recent Uploads</span></div>
           {recent.length===0
-            ?<div style={{padding:32,textAlign:'center',color:'var(--t3)',fontSize:13}}>No uploads yet</div>
+            ?<div style={{padding:36,textAlign:'center',color:'var(--t3)',fontSize:13}}>No uploads yet</div>
             :recent.map(u=>(
-              <div key={u.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 18px',borderBottom:'1px solid rgba(255,255,255,.025)'}}>
-                <FileImage size={14} color="var(--t3)" style={{flexShrink:0}}/>
+              <div key={u.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 18px',borderBottom:'1px solid rgba(255,255,255,.025)'}}>
+                <FileImage size={13} color="var(--t3)" style={{flexShrink:0}}/>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.name}</div>
+                  <div style={{fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.name}</div>
                   <div style={{fontSize:11,color:'var(--t3)',marginTop:1}}>{u.size} KB · {fmtAgo(u.ts)}{u.dur?` · ${u.dur}s`:''}</div>
                 </div>
-                <span className="dot" style={{background:u.status==='done'?'var(--green)':u.status==='error'?'var(--red)':'var(--t3)'}}/>
+                <span className="dot" style={{background:u.status==='done'?'var(--green)':u.status==='error'?'var(--red)':'var(--amber)'}}/>
               </div>
           ))}
         </div>
         <div className="card">
           <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Traffic Sources</span></div>
-          {vs.length===0
-            ?<div style={{padding:32,textAlign:'center',color:'var(--t3)',fontSize:13}}>No visitor data yet</div>
-            :countBy(vs,v=>parseRef(v.ref)).slice(0,7).map(([ref,cnt])=>{
-              const pct=Math.round(cnt/vs.length*100);
-              return (
-                <div key={ref} style={{padding:'10px 18px',borderBottom:'1px solid rgba(255,255,255,.025)'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:13}}>
-                    <span>{ref}</span><span style={{color:'var(--t3)'}}>{cnt} ({pct}%)</span>
-                  </div>
-                  <div style={{height:2,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:`${pct}%`,background:'rgba(255,255,255,.5)',borderRadius:99}}/>
-                  </div>
-                </div>
-              );
-            })
-          }
+          {refs.length===0
+            ?<div style={{padding:36,textAlign:'center',color:'var(--t3)',fontSize:13}}>No visitor data yet</div>
+            :refs.slice(0,8).map(([ref,cnt])=>(
+              <BarRow key={ref} label={ref} count={cnt} total={vs.length} color="rgba(192,132,252,.6)"/>
+          ))}
         </div>
       </div>
     </div>
   );
 };
 
-/* ═══ VISITORS TAB ═══ */
-const VisitorsTab = ({db}) => {
+/* ════════════════════════════════
+   VISITORS TAB
+════════════════════════════════ */
+const VisitorsTab=({db})=>{
   const vs=db.visitors||[];
   const [filter,setFilter]=useState('all');
+
   const filtered=useMemo(()=>{
     if(filter==='24h')return vs.filter(v=>last24h(v.lastTs));
     if(filter==='7d')return vs.filter(v=>last7d(v.lastTs));
     if(filter==='30d')return vs.filter(v=>last30d(v.lastTs));
     return vs;
   },[vs,filter]);
+
   const sorted=[...filtered].sort((a,b)=>b.lastTs-a.lastTs);
-  const platforms=countBy(vs,v=>parseUA(v.ua));
-  const browsers=countBy(vs,v=>parseBrowser(v.ua));
-  const langs=countBy(vs,v=>(v.lang||'?').split('-')[0].toUpperCase()).slice(0,6);
-  const tzs=countBy(vs,v=>v.tz||'Unknown').slice(0,6);
-  const total=vs.length||1;
+  const total=filtered.length||1;
+
+  const platforms=countBy(filtered,v=>parseUA(v.ua));
+  const browsers=countBy(filtered,v=>parseBrowser(v.ua));
+  const langs=countBy(filtered,v=>(v.lang||'?').split('-')[0].toUpperCase()).slice(0,8);
+  const refs=countBy(filtered,v=>parseRef(v.ref)).slice(0,8);
+  const tzs=countBy(filtered,v=>v.tz||'Unknown').slice(0,8);
+
+  /* Screen widths bucketed */
+  const screenBuckets={Mobile:0,Tablet:0,Desktop:0};
+  filtered.forEach(v=>{
+    const w=v.vw||v.w||0;
+    if(w<768)screenBuckets.Mobile++;
+    else if(w<1280)screenBuckets.Tablet++;
+    else screenBuckets.Desktop++;
+  });
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:24}}>
       <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
-        <div>
-          <h2 style={{fontFamily:"'Instrument Serif',serif",fontSize:28,fontWeight:400,marginBottom:4}}>Visitors</h2>
-          <p style={{color:'var(--t3)',fontSize:14}}>{vs.length} unique visitors tracked</p>
-        </div>
-        <div style={{display:'flex',gap:6}}>
-          {[['all','All'],['30d','30d'],['7d','7d'],['24h','Today']].map(([v,l])=>(
-            <button key={v} className={`btn btn-sm ${filter===v?'btn-white':'btn-outline'}`} style={{fontSize:12}} onClick={()=>setFilter(v)}>{l}</button>
+        <SH title="Visitors" sub={`${vs.length} unique visitors tracked in this browser`}/>
+        <div style={{display:'flex',gap:6,marginBottom:24}}>
+          {[['all','All time'],['30d','30 days'],['7d','7 days'],['24h','Today']].map(([v,l])=>(
+            <button key={v} className={`btn btn-sm ${filter===v?'btn-glow':'btn-ghost'}`} style={{fontSize:12}} onClick={()=>setFilter(v)}>{l}</button>
           ))}
         </div>
       </div>
 
+      {/* Breakdown cards */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
-        {[[platforms,'Platforms'],[browsers,'Browsers'],[langs,'Languages']].map(([data,title])=>(
+        {[
+          ['Platforms',platforms,'var(--v1)'],
+          ['Browsers',browsers,'var(--v2)'],
+          ['Languages',langs,'var(--v3)'],
+        ].map(([title,data,color])=>(
           <div key={title} className="card">
-            <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>{title}</span></div>
-            <div style={{padding:'8px 0'}}>
-              {data.slice(0,6).map(([k,c])=>{
-                const pct=Math.round(c/total*100);
-                return (
-                  <div key={k} style={{padding:'8px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
-                    <span style={{fontSize:13}}>{k}</span>
-                    <div style={{display:'flex',alignItems:'center',gap:8,flex:1,justifyContent:'flex-end'}}>
-                      <div style={{width:70,height:2,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden'}}>
-                        <div style={{height:'100%',width:`${pct}%`,background:'white',borderRadius:99}}/>
-                      </div>
-                      <span style={{fontSize:12,color:'var(--t3)',width:30,textAlign:'right'}}>{pct}%</span>
-                    </div>
-                  </div>
-                );
-              })}
+            <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>{title}</span></div>
+            <div style={{padding:'6px 0'}}>
+              {data.slice(0,7).map(([k,c])=><BarRow key={k} label={k} count={c} total={total} color={color}/>)}
               {data.length===0&&<div style={{padding:'16px 18px',fontSize:13,color:'var(--t3)'}}>No data yet</div>}
             </div>
           </div>
         ))}
       </div>
 
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+        {/* Device type */}
+        <div className="card">
+          <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Device Type (by viewport)</span></div>
+          <div style={{padding:'6px 0'}}>
+            {Object.entries(screenBuckets).map(([k,c])=><BarRow key={k} label={k} count={c} total={total} color="var(--em)"/>)}
+          </div>
+        </div>
+        {/* Referrers */}
+        <div className="card">
+          <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Traffic Sources</span></div>
+          <div style={{padding:'6px 0'}}>
+            {refs.map(([k,c])=><BarRow key={k} label={k} count={c} total={total} color="rgba(192,132,252,.7)"/>)}
+            {refs.length===0&&<div style={{padding:'16px 18px',fontSize:13,color:'var(--t3)'}}>No data yet</div>}
+          </div>
+        </div>
+      </div>
+
+      {/* Timezones */}
       {tzs.length>0&&(
         <div className="card">
-          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Timezones</span></div>
-          <div style={{padding:'8px 0',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))'}}>
-            {tzs.map(([tz,c])=>{
-              const pct=Math.round(c/total*100);
-              return (
-                <div key={tz} style={{padding:'10px 18px'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:13}}>
-                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>{tz}</span>
-                    <span style={{color:'var(--t3)',flexShrink:0,marginLeft:8}}>{pct}%</span>
-                  </div>
-                  <div style={{height:2,background:'rgba(255,255,255,.06)',borderRadius:99,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:`${pct}%`,background:'rgba(255,255,255,.4)',borderRadius:99}}/>
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Timezones</span></div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',padding:'6px 0'}}>
+            {tzs.map(([tz,c])=><BarRow key={tz} label={tz} count={c} total={total} color="rgba(129,140,248,.7)"/>)}
           </div>
         </div>
       )}
 
+      {/* Visitor table */}
       <div className="card">
-        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <span style={{fontSize:13,fontWeight:600}}>Visitor Log</span>
-          <span style={{fontSize:12,color:'var(--t3)'}}>{filtered.length} records</span>
+          <span style={{fontSize:12,color:'var(--t3)'}}>{sorted.length} records</span>
         </div>
         <div className="scroll-x">
           {sorted.length===0
@@ -651,20 +1005,26 @@ const VisitorsTab = ({db}) => {
               <Users size={36} style={{margin:'0 auto 12px',opacity:.2,display:'block'}}/>
               No visitors in this range
             </div>
-            :<table className="tbl" style={{width:'100%',borderCollapse:'collapse'}}>
-              <thead><tr><th>ID</th><th>First seen</th><th>Last seen</th><th>Sessions</th><th>Platform</th><th>Browser</th><th>Language</th><th>Timezone</th><th>Source</th></tr></thead>
+            :<table className="tbl">
+              <thead>
+                <tr>
+                  <th>Visitor ID</th><th>First seen</th><th>Last seen</th>
+                  <th>Sessions</th><th>Platform</th><th>Browser</th>
+                  <th>Lang</th><th>Timezone</th><th>Source</th>
+                </tr>
+              </thead>
               <tbody>
                 {sorted.map(v=>(
                   <tr key={v.id}>
-                    <td><code style={{fontSize:10,color:'var(--t3)',background:'rgba(255,255,255,.04)',padding:'2px 6px',borderRadius:4}}>{v.id}</code></td>
-                    <td style={{color:'var(--t3)',fontSize:12,whiteSpace:'nowrap'}}>{fmtTime(v.firstTs)}</td>
-                    <td style={{fontSize:12,whiteSpace:'nowrap'}}>{fmtAgo(v.lastTs)}</td>
-                    <td style={{textAlign:'center'}}>{v.sessions||1}</td>
+                    <td><code style={{fontSize:10,color:'var(--t3)',background:'rgba(255,255,255,.04)',padding:'2px 7px',borderRadius:5}}>{v.id}</code></td>
+                    <td style={{color:'var(--t3)',fontSize:11,whiteSpace:'nowrap'}}>{fmtTime(v.firstTs)}</td>
+                    <td style={{fontSize:11,whiteSpace:'nowrap'}}>{fmtAgo(v.lastTs)}</td>
+                    <td style={{textAlign:'center',color:v.sessions>1?'var(--v1)':'var(--t2)'}}>{v.sessions||1}</td>
                     <td style={{fontSize:12}}>{parseUA(v.ua)}</td>
                     <td style={{fontSize:12}}>{parseBrowser(v.ua)}</td>
                     <td style={{fontSize:12}}>{(v.lang||'?').split('-')[0].toUpperCase()}</td>
                     <td style={{fontSize:11,color:'var(--t3)',maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{v.tz||'—'}</td>
-                    <td style={{color:'var(--t3)',fontSize:12}}>{parseRef(v.ref)}</td>
+                    <td style={{fontSize:12,color:'var(--t2)'}}>{parseRef(v.ref)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -676,39 +1036,102 @@ const VisitorsTab = ({db}) => {
   );
 };
 
-/* ═══ UPLOADS TAB ═══ */
-const UploadsTab = ({db}) => {
-  const ups=[...(db.uploads||[])].reverse();
-  const done=ups.filter(u=>u.status==='done').length;
-  const errs=ups.filter(u=>u.status==='error').length;
-  const withDur=ups.filter(u=>u.dur>0);
-  const avgDur=withDur.length?Math.round(withDur.reduce((a,u)=>a+u.dur,0)/withDur.length):0;
+/* ════════════════════════════════
+   UPLOADS TAB
+════════════════════════════════ */
+const UploadsTab=({db})=>{
+  const ups=[...(db.uploads||[])].sort((a,b)=>b.ts-a.ts);
+  const done=ups.filter(u=>u.status==='done');
+  const errs=ups.filter(u=>u.status==='error');
+  const withDur=ups.filter(u=>u.dur>0&&u.dur<600);
+  const avgDur=withDur.length?Math.round(withDur.reduce((a,u)=>a+u.dur,0)/withDur.length):null;
+  const successRate=ups.length>0?Math.round(done.length/ups.length*100):null;
   const totalKB=ups.reduce((a,u)=>a+(u.size||0),0);
+
+  /* File type breakdown */
+  const types=countBy(ups,u=>{
+    const t=u.type||'';
+    if(t.includes('png'))return'PNG';
+    if(t.includes('jpeg')||t.includes('jpg'))return'JPEG';
+    if(t.includes('webp'))return'WebP';
+    const n=u.name||'';
+    if(n.endsWith('.png'))return'PNG';
+    if(n.endsWith('.jpg')||n.endsWith('.jpeg'))return'JPEG';
+    if(n.endsWith('.webp'))return'WebP';
+    return'Other';
+  });
+
+  /* Size buckets */
+  const sizeBuckets={'<100 KB':0,'100–500 KB':0,'500 KB–1 MB':0,'>1 MB':0};
+  ups.forEach(u=>{
+    const s=u.size||0;
+    if(s<100)sizeBuckets['<100 KB']++;
+    else if(s<500)sizeBuckets['100–500 KB']++;
+    else if(s<1024)sizeBuckets['500 KB–1 MB']++;
+    else sizeBuckets['>1 MB']++;
+  });
+
+  /* Hourly distribution (last 7 days) */
+  const hourly=Array(24).fill(0);
+  ups.filter(u=>last7d(u.ts)).forEach(u=>hourly[new Date(u.ts).getHours()]++);
+  const maxH=Math.max(...hourly,1);
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:24}}>
-      <div>
-        <h2 style={{fontFamily:"'Instrument Serif',serif",fontSize:28,fontWeight:400,marginBottom:4}}>Uploads</h2>
-        <p style={{color:'var(--t3)',fontSize:14}}>{ups.length} images processed total</p>
+      <SH title="Uploads" sub={`${ups.length} images processed total`}/>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12}}>
+        <StatCard label="Total" value={ups.length} icon={FileImage} accent="var(--v1)" delay={0}/>
+        <StatCard label="Successful" value={done.length} sub={successRate!==null?`${successRate}% rate`:'no data'} icon={Check} accent="var(--green)" delay={.06}/>
+        <StatCard label="Failed" value={errs.length} icon={AlertCircle} accent={errs.length>0?'var(--red)':undefined} delay={.12}/>
+        <StatCard label="Avg Time" value={avgDur!==null?`${avgDur}s`:'—'} icon={Timer} delay={.18}/>
+        <StatCard label="Total Data" value={totalKB>1024?`${(totalKB/1024).toFixed(1)} MB`:`${totalKB} KB`} icon={Layers} delay={.24}/>
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14}}>
-        {[['Total',ups.length,''],['Successful',done,'var(--green)'],['Failed',errs,'var(--red)'],['Avg Time',avgDur?`${avgDur}s`:'—','']].map(([l,v,c])=>(
-          <div key={l} className="stat">
-            <div style={{fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:10}}>{l}</div>
-            <div style={{fontFamily:"'Instrument Serif',serif",fontSize:32,color:c||'inherit'}}>{v}</div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        <div className="card">
+          <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>File Types</span></div>
+          <div style={{padding:'6px 0'}}>
+            {types.map(([k,c])=><BarRow key={k} label={k} count={c} total={ups.length} color="var(--v2)"/>)}
+            {types.length===0&&<div style={{padding:'16px 18px',fontSize:13,color:'var(--t3)'}}>No data</div>}
           </div>
-        ))}
+        </div>
+        <div className="card">
+          <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>File Size Distribution</span></div>
+          <div style={{padding:'6px 0'}}>
+            {Object.entries(sizeBuckets).map(([k,c])=><BarRow key={k} label={k} count={c} total={ups.length} color="var(--v3)"/>)}
+          </div>
+        </div>
       </div>
+
+      {/* Hourly heatmap */}
       <div className="card">
-        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Upload Log</span></div>
+        <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}>
+          <span style={{fontSize:13,fontWeight:600}}>Upload Time Distribution</span>
+          <span style={{fontSize:11,color:'var(--t3)',marginLeft:8}}>last 7 days · by hour</span>
+        </div>
+        <div style={{padding:'16px 20px 14px',display:'flex',alignItems:'flex-end',gap:3,height:80}}>
+          {hourly.map((c,i)=>(
+            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4,height:'100%',justifyContent:'flex-end'}}>
+              <div title={`${c} uploads at ${i}:00`}
+                style={{width:'100%',height:`${(c/maxH)*100}%`,minHeight:c>0?3:0,background:'var(--v1)',borderRadius:'2px 2px 0 0',opacity:.65+c/maxH*.35,transition:'height .3s ease'}}/>
+              {i%4===0&&<span style={{fontSize:9,color:'var(--t3)'}}>{i}h</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Upload log */}
+      <div className="card">
+        <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Upload Log</span></div>
         {ups.length===0
           ?<div style={{padding:48,textAlign:'center',color:'var(--t3)',fontSize:13}}>
             <FileImage size={36} style={{margin:'0 auto 12px',opacity:.2,display:'block'}}/>
             No uploads yet
           </div>
           :<div className="scroll-x">
-            <table className="tbl" style={{width:'100%',borderCollapse:'collapse'}}>
-              <thead><tr><th>File</th><th>Size</th><th>Time</th><th>Duration</th><th>Status</th></tr></thead>
+            <table className="tbl">
+              <thead><tr><th>File</th><th>Size</th><th>Type</th><th>Uploaded</th><th>Duration</th><th>Status</th></tr></thead>
               <tbody>
                 {ups.map(u=>(
                   <tr key={u.id}>
@@ -717,15 +1140,21 @@ const UploadsTab = ({db}) => {
                         <div style={{width:28,height:28,background:'rgba(255,255,255,.04)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                           <FileImage size={12} color="var(--t3)"/>
                         </div>
-                        <span style={{maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.name}</span>
+                        <span style={{maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:12}}>{u.name}</span>
                       </div>
                     </td>
-                    <td style={{color:'var(--t3)'}}>{u.size} KB</td>
-                    <td style={{color:'var(--t3)',fontSize:12,whiteSpace:'nowrap'}}>{fmtTime(u.ts)}</td>
-                    <td style={{color:'var(--t3)'}}>{u.dur?`${u.dur}s`:'—'}</td>
+                    <td style={{color:'var(--t3)',fontSize:12}}>{u.size} KB</td>
+                    <td style={{fontSize:11}}>
+                      <span className="tag" style={{background:'rgba(255,255,255,.05)',color:'var(--t2)'}}>{(u.type||'?').replace('image/','').toUpperCase()}</span>
+                    </td>
+                    <td style={{color:'var(--t3)',fontSize:11,whiteSpace:'nowrap'}}>{fmtTime(u.ts)}</td>
+                    <td style={{color:'var(--t3)',fontSize:12}}>{u.dur!=null?`${u.dur}s`:'—'}</td>
                     <td>
-                      <span className="tag" style={{background:u.status==='done'?'rgba(61,220,132,.1)':u.status==='error'?'rgba(255,79,79,.1)':'rgba(255,255,255,.05)',color:u.status==='done'?'var(--green)':u.status==='error'?'var(--red)':'var(--t3)'}}>
-                        <span className="dot" style={{background:u.status==='done'?'var(--green)':u.status==='error'?'var(--red)':'var(--t3)',width:6,height:6}}/>
+                      <span className="tag" style={{
+                        background:u.status==='done'?'rgba(52,211,153,.1)':u.status==='error'?'rgba(248,113,113,.1)':'rgba(251,191,36,.08)',
+                        color:u.status==='done'?'var(--green)':u.status==='error'?'var(--red)':'var(--amber)',
+                      }}>
+                        <span className="dot" style={{background:u.status==='done'?'var(--green)':u.status==='error'?'var(--red)':'var(--amber)',width:5,height:5}}/>
                         {u.status}
                       </span>
                     </td>
@@ -740,41 +1169,52 @@ const UploadsTab = ({db}) => {
   );
 };
 
-/* ═══ SETTINGS TAB ═══ */
-const SettingsTab = ({onClear}) => {
+/* ════════════════════════════════
+   SETTINGS TAB
+════════════════════════════════ */
+const SettingsTab=({onClear})=>{
   const [cleared,setCleared]=useState(false);
   const clear=()=>{onClear();setCleared(true);setTimeout(()=>setCleared(false),2500);};
   const db=getDB();
   const dbSize=new Blob([JSON.stringify(db)]).size;
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:24,maxWidth:500}}>
-      <div>
-        <h2 style={{fontFamily:"'Instrument Serif',serif",fontSize:28,fontWeight:400,marginBottom:4}}>Settings</h2>
-        <p style={{color:'var(--t3)',fontSize:14}}>Manage data and preferences</p>
-      </div>
+    <div style={{display:'flex',flexDirection:'column',gap:24,maxWidth:520}}>
+      <SH title="Settings" sub="Manage data and preferences"/>
       <div className="card">
-        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Analytics Storage</span></div>
+        <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>Analytics Storage</span></div>
         <div style={{padding:20,display:'flex',flexDirection:'column',gap:16}}>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            {[['Visitors',(db.visitors||[]).length],['Uploads',(db.uploads||[]).length],['Page Views',(db.pageviews||[]).length],['Storage',`${Math.round(dbSize/1024)} KB`]].map(([k,v])=>(
-              <div key={k} style={{background:'var(--s2)',borderRadius:10,padding:'12px 16px',border:'1px solid var(--b1)'}}>
-                <div style={{fontSize:10,color:'var(--t3)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.07em',marginBottom:6}}>{k}</div>
-                <div style={{fontFamily:"'Instrument Serif',serif",fontSize:24}}>{v}</div>
+            {[
+              ['Visitors',(db.visitors||[]).length],
+              ['Uploads',(db.uploads||[]).length],
+              ['Page Views',(db.pageviews||[]).length],
+              ['Storage',`${Math.round(dbSize/1024)} KB`],
+            ].map(([k,v])=>(
+              <div key={k} style={{background:'var(--s2)',borderRadius:11,padding:'13px 16px',border:'1px solid var(--b1)'}}>
+                <div style={{fontSize:10,color:'var(--t3)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{k}</div>
+                <div style={{fontFamily:"'Fraunces',serif",fontSize:26}}>{v}</div>
               </div>
             ))}
           </div>
-          <p style={{color:'var(--t3)',fontSize:13,lineHeight:1.7}}>All data lives in your browser's localStorage. Nothing is sent to any server.</p>
-          <button className={`btn ${cleared?'btn-outline':'btn-danger'}`} style={{alignSelf:'flex-start',gap:8}} onClick={clear}>
-            {cleared?<><Check size={14}/>Cleared!</>:<><Trash2 size={14}/>Clear all data</>}
+          <p style={{color:'var(--t3)',fontSize:13,lineHeight:1.7}}>All data is stored in your browser's localStorage. Nothing is sent to any server.</p>
+          <button className={`btn ${cleared?'btn-ghost':'btn-danger'}`} style={{alignSelf:'flex-start'}} onClick={clear}>
+            {cleared?<><Check size={14}/>Cleared!</>:<><Trash2 size={14}/>Clear all analytics data</>}
           </button>
         </div>
       </div>
       <div className="card">
-        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>App Info</span></div>
-        <div style={{padding:'4px 0'}}>
-          {[['Version','v2.0'],['AI Model','@imgly/background-removal 1.4.5'],['Admin path','/admin'],['Data store','Browser localStorage']].map(([k,v])=>(
-            <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'10px 18px',borderBottom:'1px solid rgba(255,255,255,.025)',fontSize:13}}>
-              <span style={{color:'var(--t3)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span>
+        <div style={{padding:'13px 18px',borderBottom:'1px solid var(--b1)'}}><span style={{fontSize:13,fontWeight:600}}>App Info</span></div>
+        <div>
+          {[
+            ['Version','v2.0'],
+            ['AI Model','@imgly/background-removal 1.4.5'],
+            ['Processing','100% client-side'],
+            ['Admin path','/admin'],
+            ['Data store','Browser localStorage'],
+          ].map(([k,v])=>(
+            <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'10px 18px',borderBottom:'1px solid rgba(255,255,255,.03)',fontSize:13}}>
+              <span style={{color:'var(--t3)'}}>{k}</span>
+              <span style={{fontWeight:500,color:'var(--t2)'}}>{v}</span>
             </div>
           ))}
         </div>
