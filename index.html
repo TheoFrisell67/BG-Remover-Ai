@@ -3,383 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BG Remoover</title>
+    <title>BG Remoover — AI Background Removal</title>
     
-    <!-- CUSTOM FAVICON -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z%22/></svg>">
 
-    <!-- GOOGLE FONTS: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                    },
-                    colors: {
-                        slate: {
-                            850: '#151e2e',
-                            900: '#0f172a',
-                            950: '#020617',
-                        },
-                        indigo: {
-                            450: '#6366f1',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                        }
-                    },
-                    animation: {
-                        'blob': 'blob 7s infinite',
-                        'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'gradient-x': 'gradient-x 3s ease infinite',
-                    },
-                    keyframes: {
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
-                        },
-                        'pulse-glow': {
-                            '0%, 100%': { opacity: 1 },
-                            '50%': { opacity: .5 },
-                        },
-                        'gradient-x': {
-                            '0%, 100%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'left center'
-                            },
-                            '50%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'right center'
-                            },
-                        },
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+
     <style>
-        /* Custom Grid Background Pattern */
-        .bg-grid-pattern {
-            background-size: 40px 40px;
-            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        * { box-sizing: border-box; }
+
+        :root {
+            --bg: #06050a;
+            --surface: #0e0c17;
+            --surface2: #161323;
+            --border: rgba(255,255,255,0.06);
+            --border-hover: rgba(255,255,255,0.12);
+            --accent: #b060ff;
+            --accent2: #5b8aff;
+            --text: #f0ecff;
+            --muted: #6b6580;
+            --success: #34d18a;
+            --danger: #ff5b5b;
         }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
         }
-        ::-webkit-scrollbar-track {
-            background: #0f172a; 
+
+        h1,h2,h3,h4,h5,h6,.font-display {
+            font-family: 'Syne', sans-serif;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #334155; 
-            border-radius: 4px;
+
+        /* Noise texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569; 
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #2a2440; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3d3560; }
+
+        /* Ambient gradient */
+        .ambient {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Checkerboard for transparent bg */
+        .checker {
+            background-image: 
+                linear-gradient(45deg, #1a1a2e 25%, transparent 25%),
+                linear-gradient(-45deg, #1a1a2e 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #1a1a2e 75%),
+                linear-gradient(-45deg, transparent 75%, #1a1a2e 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+            background-color: #12101e;
+        }
+
+        /* Glow button */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 28px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 30px rgba(176, 96, 255, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 50px rgba(176, 96, 255, 0.4);
+        }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        .btn-ghost {
+            background: rgba(255,255,255,0.04);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 11px 24px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.08);
+            color: var(--text);
+            border-color: var(--border-hover);
+        }
+
+        /* Card */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+        .card:hover { border-color: var(--border-hover); }
+
+        /* Upload zone */
+        .upload-zone {
+            border: 2px dashed rgba(176, 96, 255, 0.2);
+            border-radius: 24px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-zone:hover, .upload-zone.dragging {
+            border-color: rgba(176, 96, 255, 0.6);
+            background: rgba(176, 96, 255, 0.04);
+        }
+        .upload-zone.dragging {
+            transform: scale(1.01);
+            box-shadow: 0 0 60px rgba(176, 96, 255, 0.15);
+        }
+
+        /* Progress ring */
+        .progress-ring circle {
+            transition: stroke-dashoffset 0.1s linear;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Tag */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* Admin panel styles */
+        .admin-stat-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.2s ease;
+        }
+        .admin-stat-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .admin-table th {
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+        .admin-table td {
+            padding: 12px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+        }
+        .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .fade-up { animation: fadeUp 0.5s ease forwards; }
+        .fade-up-1 { animation: fadeUp 0.5s 0.1s ease both; }
+        .fade-up-2 { animation: fadeUp 0.5s 0.2s ease both; }
+        .fade-up-3 { animation: fadeUp 0.5s 0.3s ease both; }
+        .spin { animation: spin 1s linear infinite; }
+        .pulse { animation: pulse 2s ease infinite; }
+
+        /* Input */
+        .input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input:focus { border-color: rgba(176, 96, 255, 0.5); }
+        .input::placeholder { color: var(--muted); }
+
+        /* Color swatch */
+        .swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .swatch:hover { transform: scale(1.15); }
+        .swatch.active {
+            border-color: white;
+            box-shadow: 0 0 0 2px rgba(176, 96, 255, 0.5);
+            transform: scale(1.15);
+        }
+
+        /* Sidebar nav */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+        .nav-item.active { background: rgba(176, 96, 255, 0.12); color: var(--accent); }
+
+        /* Badge dot */
+        .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            display: inline-block;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased overflow-x-hidden selection:bg-indigo-500/30 selection:text-white">
-
-    <!-- Background Layers -->
-    <div className="fixed inset-0 z-0 pointer-events-none">
-        <!-- Grid Pattern -->
-        <div className="absolute inset-0 bg-grid-pattern"></div>
-        <!-- Ambient Blobs -->
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-600/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-4000"></div>
-    </div>
-
-    <div id="root" className="relative z-10"></div>
+<body>
+    <div id="root" style="position:relative;z-index:1;min-height:100vh;"></div>
 
     <script type="text/babel" data-type="module">
-        // Import Icons from ESM
-        import { 
-            Upload, 
-            Download, 
-            Sparkles, 
-            X, 
-            Image as ImageIcon,
-            RefreshCw,
-            Check
-        } from 'https://esm.sh/lucide-react@0.344.0';
+        import { Upload, Download, Sparkles, X, Image as ImageIcon, RefreshCw, Check, Lock, LayoutDashboard, Image, Users, Settings, LogOut, TrendingUp, Zap, Eye, ChevronRight, Shield, Activity, Clock, Globe, BarChart2, AlertCircle } from 'https://esm.sh/lucide-react@0.344.0';
 
-        const { useState, useEffect, useCallback, useRef } = React;
+        const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
-        // --- GLOBAL CACHE FOR SPEED ---
+        /* ─── Storage helpers (simulate analytics) ─── */
+        const STORAGE_KEY = 'bgrm_analytics';
+        const getAnalytics = () => {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : { total: 0, sessions: [], uploads: [] };
+            } catch { return { total: 0, sessions: [], uploads: [] }; }
+        };
+        const recordUpload = (filename, size) => {
+            try {
+                const d = getAnalytics();
+                d.total = (d.total || 0) + 1;
+                d.uploads = [...(d.uploads || []), {
+                    id: Date.now(),
+                    name: filename,
+                    size: Math.round(size / 1024),
+                    time: new Date().toISOString(),
+                    status: 'processing',
+                }].slice(-50);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+            } catch {}
+        };
+        const markUploadDone = (id, success) => {
+            try {
+                const d = getAnalytics();
+                d.uploads = (d.uploads || []).map(u => u.id === id ? { ...u, status: success ? 'done' : 'error' } : u);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+            } catch {}
+        };
+
+        /* ─── Routing (hash-based) ─── */
+        const useRoute = () => {
+            const [path, setPath] = useState(window.location.pathname + window.location.hash);
+            useEffect(() => {
+                const onPop = () => setPath(window.location.pathname + window.location.hash);
+                window.addEventListener('popstate', onPop);
+                return () => window.removeEventListener('popstate', onPop);
+            }, []);
+            const navigate = (to) => {
+                window.history.pushState({}, '', to);
+                setPath(to);
+            };
+            return { path, navigate };
+        };
+
+        /* ─── Cached BG removal ─── */
         let cachedRemoveBackground = null;
         let isLibraryLoading = false;
 
-        // --- Components ---
-
-        const Button = ({ children, onClick, variant = "primary", className = "", disabled = false, type = "button" }) => {
-            const baseStyles = "inline-flex items-center justify-center rounded-full font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-50 disabled:pointer-events-none";
-            
-            const variants = {
-                primary: "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5 active:translate-y-0",
-                outline: "border border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-500 hover:shadow-lg hover:shadow-black/20",
-                ghost: "text-slate-400 hover:text-white hover:bg-slate-800/50",
-            };
-
-            return (
-                <button 
-                    type={type}
-                    onClick={onClick} 
-                    disabled={disabled}
-                    className={`${baseStyles} ${variants[variant]} ${className} px-8 py-3`}
-                >
-                    {children}
-                </button>
-            );
-        };
-
-        const Card = ({ children, className = "" }) => (
-            <div className={`bg-slate-900/40 border border-slate-800/60 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-black/40 ${className}`}>
-                {children}
-            </div>
-        );
-
-        const ImageUploader = ({ onImageSelect }) => {
-            const [isDragging, setIsDragging] = useState(false);
-            const fileInputRef = useRef(null);
-
-            const handleDrag = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.type === 'dragenter' || e.type === 'dragover') {
-                    setIsDragging(true);
-                } else if (e.type === 'dragleave') {
-                    setIsDragging(false);
-                }
-            };
-
-            const handleDrop = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsDragging(false);
-
-                const files = e.dataTransfer.files;
-                if (files && files.length > 0) {
-                    processFile(files[0]);
-                }
-            };
-
-            const handleFileInput = (e) => {
-                const files = e.target.files;
-                if (files && files.length > 0) {
-                    processFile(files[0]);
-                }
-            };
-
-            const processFile = (file) => {
-                if (!file.type.match('image.*')) {
-                    alert('Please select an image file');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    onImageSelect(file, e.target.result);
-                };
-                reader.readAsDataURL(file);
-            };
-
-            return (
-                <div 
-                    className={`group relative border-2 border-dashed rounded-[2rem] p-20 text-center transition-all duration-500 cursor-pointer overflow-hidden
-                        ${isDragging 
-                            ? 'border-indigo-500 bg-indigo-500/5 scale-[1.01] shadow-[0_0_50px_-10px_rgba(99,102,241,0.3)]' 
-                            : 'border-slate-700 hover:border-indigo-400 hover:bg-slate-800/20 hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.15)]'}`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current.click()}
-                >
-                    <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        className="hidden" 
-                        accept="image/png, image/jpeg, image/webp"
-                        onChange={handleFileInput}
-                    />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
-
-                    <div className="relative z-10 flex flex-col items-center gap-8">
-                        {/* IMPROVED ICON */}
-                        <div className="relative group-hover:scale-110 transition-transform duration-500">
-                            {/* Glow Effect */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                            
-                            {/* Icon Container */}
-                            <div className={`relative bg-slate-900 border-2 transition-all duration-500 rounded-full p-6 shadow-xl
-                                ${isDragging 
-                                    ? 'border-indigo-400 scale-110 rotate-3' 
-                                    : 'border-slate-700 group-hover:border-indigo-500/50'}`}>
-                                <Upload className={`w-10 h-10 transition-colors duration-300 ${isDragging ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400'}`} />
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <h3 className="text-3xl font-bold text-white tracking-tight">
-                                Upload Image
-                            </h3>
-                            <p className="text-slate-400 font-medium">
-                                or drag and drop here
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const ImageProcessor = ({ imagePreview, onComplete, onError, onProgress }) => {
-            useEffect(() => {
-                const processImage = async () => {
-                    try {
-                        const response = await fetch(imagePreview);
-                        const blob = await response.blob();
-                        
-                        if (cachedRemoveBackground) {
-                            console.log("Using cached AI model (Fast!)");
-                            const resultBlob = await cachedRemoveBackground(blob, {
-                                progress: (key, current, total) => {
-                                    const percent = total > 0 ? Math.round((current / total) * 100) : 0;
-                                    onProgress(percent);
-                                },
-                                debug: false,
-                                proxyToWorker: true,
-                                model: 'medium',
-                            });
-                            finishProcessing(resultBlob);
-                            return;
-                        }
-
-                        if (!isLibraryLoading) {
-                            isLibraryLoading = true;
-                            onProgress(1); 
-
-                            const moduleUrl = `https://esm.sh/@imgly/background-removal@1.4.5`;
-                            const { removeBackground } = await import(moduleUrl);
-                            
-                            cachedRemoveBackground = removeBackground;
-                            isLibraryLoading = false;
-
-                            console.log("AI Model Loaded & Cached");
-                            
-                            const resultBlob = await removeBackground(blob, {
-                                progress: (key, current, total) => {
-                                    const percent = total > 0 ? Math.round((current / total) * 100) : 0;
-                                    onProgress(percent);
-                                },
-                                debug: false,
-                                proxyToWorker: true,
-                                model: 'medium',
-                            });
-                            finishProcessing(resultBlob);
-                        }
-
-                    } catch (error) {
-                        console.error("AI Processing failed:", error);
-                        let errorMsg = "Failed to process image.";
-                        if (error.message) errorMsg += ` ${error.message}`;
-                        onError(errorMsg);
-                    }
-                };
-
-                const finishProcessing = async (resultBlob) => {
-                    const resultBitmap = await createImageBitmap(resultBlob);
-                    const canvas = document.createElement('canvas');
-                    canvas.width = resultBitmap.width;
-                    canvas.height = resultBitmap.height;
-                    const ctx = canvas.getContext('2d');
-                    
-                    if (ctx) {
-                        ctx.drawImage(resultBitmap, 0, 0);
-                        onComplete(canvas);
-                    } else {
-                        throw new Error("Failed to get canvas context");
-                    }
-                };
-
-                processImage();
-            }, [imagePreview, onComplete, onError, onProgress]);
-
-            return null;
-        };
-
-        const DownloadButton = ({ canvas, filename, bgColor }) => {
-            const handleDownload = () => {
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height;
-                const ctx = tempCanvas.getContext('2d');
-
-                if (bgColor !== 'transparent') {
-                    ctx.fillStyle = bgColor;
-                    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                }
-
-                ctx.drawImage(canvas, 0, 0);
-
-                const link = document.createElement('a');
-                link.download = `${filename}-transparent.png`;
-                link.href = tempCanvas.toDataURL('image/png');
-                link.click();
-            };
-
-            return (
-                <Button onClick={handleDownload} variant="primary" className="gap-2 text-sm shadow-indigo-500/40">
-                    <Download className="w-4 h-4" />
-                    Download PNG
-                </Button>
-            );
-        };
-
-        // --- Main App ---
-
+        /* ══════════════════════════════════════════
+           MAIN APP
+        ══════════════════════════════════════════ */
         const App = () => {
+            const { path, navigate } = useRoute();
+            const isAdmin = path.includes('/admin');
+
+            if (isAdmin) return <AdminShell navigate={navigate} />;
+            return <MainApp navigate={navigate} />;
+        };
+
+        /* ══════════════════════════════════════════
+           MAIN APP — Background Remover
+        ══════════════════════════════════════════ */
+        const MainApp = ({ navigate }) => {
             const [imagePreview, setImagePreview] = useState(null);
             const [processedCanvas, setProcessedCanvas] = useState(null);
             const [isProcessing, setIsProcessing] = useState(false);
             const [error, setError] = useState(null);
             const [fileName, setFileName] = useState("image");
-            
-            // SPLIT PROGRESS: Real (from AI) vs Visual (for UI)
             const [realProgress, setRealProgress] = useState(0);
             const [visualProgress, setVisualProgress] = useState(0);
-            
             const [bgColor, setBgColor] = useState('transparent');
+            const [uploadId, setUploadId] = useState(null);
+            const [viewMode, setViewMode] = useState('split'); // split | slider | single
 
-            // SMOOTH PROGRESS LOGIC
             useEffect(() => {
                 if (visualProgress < realProgress) {
                     const timer = setInterval(() => {
-                        setVisualProgress(prev => {
-                            if (prev < realProgress) {
-                                return Math.min(prev + 1, realProgress);
-                            }
-                            return prev;
-                        });
-                    }, 10); 
+                        setVisualProgress(prev => prev < realProgress ? Math.min(prev + 2, realProgress) : prev);
+                    }, 12);
                     return () => clearInterval(timer);
                 }
             }, [realProgress, visualProgress]);
@@ -393,20 +385,23 @@
                 setError(null);
                 setRealProgress(0);
                 setVisualProgress(0);
+                const id = Date.now();
+                setUploadId(id);
+                recordUpload(file.name, file.size);
             }, []);
 
             const handleProcessingComplete = useCallback((canvas) => {
                 setProcessedCanvas(canvas);
                 setRealProgress(100);
-                setTimeout(() => {
-                    setIsProcessing(false);
-                }, 800); 
-            }, []);
+                if (uploadId) markUploadDone(uploadId, true);
+                setTimeout(() => setIsProcessing(false), 700);
+            }, [uploadId]);
 
-            const handleError = useCallback((message) => {
-                setError(message);
+            const handleError = useCallback((msg) => {
+                setError(msg);
                 setIsProcessing(false);
-            }, []);
+                if (uploadId) markUploadDone(uploadId, false);
+            }, [uploadId]);
 
             const resetApp = () => {
                 setImagePreview(null);
@@ -414,210 +409,695 @@
                 setError(null);
                 setRealProgress(0);
                 setVisualProgress(0);
+                setUploadId(null);
             };
 
             const colors = [
-                { name: 'Transparent', val: 'transparent' },
+                { name: 'Transparent', val: 'transparent', bg: 'repeating-conic-gradient(#222 0% 25%, #111 0% 50%) 0 0 / 10px 10px' },
                 { name: 'White', val: '#ffffff' },
                 { name: 'Black', val: '#000000' },
-                { name: 'Gray', val: '#6b7280' },
+                { name: 'Slate', val: '#334155' },
                 { name: 'Red', val: '#ef4444' },
                 { name: 'Orange', val: '#f97316' },
-                { name: 'Yellow', val: '#eab308' },
-                { name: 'Green', val: '#22c55e' },
+                { name: 'Yellow', val: '#fbbf24' },
+                { name: 'Lime', val: '#84cc16' },
+                { name: 'Cyan', val: '#06b6d4' },
                 { name: 'Blue', val: '#3b82f6' },
-                { name: 'Indigo', val: '#4f46e5' },
-                { name: 'Purple', val: '#a855f7' },
+                { name: 'Violet', val: '#8b5cf6' },
                 { name: 'Pink', val: '#ec4899' },
             ];
 
             return (
-                <div className="min-h-screen flex flex-col items-center justify-center p-6 md:p-12">
-                    <div className="w-full max-w-6xl mx-auto space-y-16">
-                        
-                        {/* Header */}
-                        <header className="text-center space-y-6 animate-in fade-in slide-in-from-top-4 duration-700">
-                            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
-                               {/* Main Gradient Text */}
-                               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-gradient-x">BG Rem</span>
-                               {/* The "Cool" 'oo' - Holographic Shimmer Effect */}
-                               <span className="relative inline-block mx-1">
-                                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 animate-gradient-x drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]">oo</span>
-                                   <span className="absolute -inset-2 bg-cyan-500/20 blur-xl rounded-full -z-10 animate-pulse"></span>
-                               </span>
-                               {/* Rest of the word */}
-                               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-gradient-x">ver</span>
-                            </h1>
-                            <p className="text-xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
-                                Instant, AI-powered background removal. <br className="hidden md:block"/>
-                                100% free, private, and runs entirely in your browser.
-                            </p>
-                        </header>
+                <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+                    {/* Ambient lights */}
+                    <div className="ambient" style={{ width: 600, height: 600, background: 'radial-gradient(circle, rgba(176,96,255,0.08) 0%, transparent 70%)', top: -200, left: '20%' }} />
+                    <div className="ambient" style={{ width: 500, height: 500, background: 'radial-gradient(circle, rgba(91,138,255,0.06) 0%, transparent 70%)', top: 100, right: '10%' }} />
 
-                        {/* Error Display */}
-                        {error && (
-                            <Card className="border-red-900/50 bg-red-950/40 animate-in zoom-in-95 duration-200">
-                                <div className="p-6">
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-2 bg-red-500/20 rounded-xl shrink-0">
-                                            <X className="w-5 h-5 text-red-400" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold text-red-200 mb-1">Processing Failed</h3>
-                                            <p className="text-sm text-red-300/80">{error}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Card>
-                        )}
+                    {/* Header */}
+                    <header style={{ padding: '20px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Sparkles size={18} color="white" />
+                            </div>
+                            <span style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18, letterSpacing: '-0.02em' }}>
+                                BG Remoover
+                            </span>
+                            <span className="tag" style={{ background: 'rgba(176,96,255,0.12)', color: 'var(--accent)', marginLeft: 4 }}>v2</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'Syne', fontWeight: 600 }}>100% In-Browser · Private · Free</span>
+                        </div>
+                    </header>
 
-                        {/* Main Content Area */}
+                    <main style={{ flex: 1, padding: '60px 40px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+                        {/* Hero */}
                         {!imagePreview && !isProcessing && (
-                            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-                                <ImageUploader onImageSelect={handleImageSelect} />
+                            <div style={{ textAlign: 'center', marginBottom: 56 }} className="fade-up">
+                                <div className="tag" style={{ background: 'rgba(91,138,255,0.1)', color: 'var(--accent2)', marginBottom: 20, display: 'inline-flex' }}>
+                                    <Zap size={11} />
+                                    Powered by AI · Runs Locally
+                                </div>
+                                <h1 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(48px,6vw,80px)', lineHeight: 1.05, letterSpacing: '-0.03em', margin: '0 0 20px' }}>
+                                    Remove any<br />
+                                    <span style={{ background: 'linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>background</span>
+                                    , instantly.
+                                </h1>
+                                <p style={{ color: 'var(--muted)', fontSize: 18, maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
+                                    No uploads to servers. No accounts. No limits. Your images stay on your device.
+                                </p>
                             </div>
                         )}
 
-                        {/* Processing State */}
-                        {isProcessing && (
-                            <Card className="max-w-2xl mx-auto overflow-hidden animate-in zoom-in-95 duration-300 border-slate-800">
-                                <div className="p-20 text-center space-y-10">
-                                    <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
-                                        {/* Outer Glow Ring */}
-                                        <div className="absolute inset-0 rounded-full border-4 border-slate-800"></div>
-                                        <div className="absolute inset-0 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin shadow-[0_0_30px_rgba(99,102,241,0.3)]"></div>
-                                        
-                                        {/* Inner Content */}
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-5xl font-bold text-white z-10 tabular-nums tracking-tighter">
-                                                {visualProgress}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="space-y-4">
-                                        <h3 className="text-2xl font-bold text-white">
-                                            {visualProgress === 100 ? "Complete!" : "Processing Image..."}
-                                        </h3>
-                                        <p className="text-slate-400 max-w-md mx-auto">
-                                            {visualProgress === 100 
-                                                ? "Almost there..." 
-                                                : "Analyzing pixels and removing background..."}
-                                        </p>
-                                        {/* Progress Bar with fast transition */}
-                                        <div className="w-full bg-slate-800 rounded-full h-3 mt-6 overflow-hidden shadow-inner">
-                                            <div 
-                                                className="bg-gradient-to-r from-indigo-600 to-purple-600 h-3 rounded-full transition-all duration-75 ease-out shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
-                                                style={{ width: `${Math.max(visualProgress, 1)}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
+                        {/* Error */}
+                        {error && (
+                            <div className="card fade-up" style={{ borderColor: 'rgba(255,91,91,0.3)', background: 'rgba(255,91,91,0.05)', padding: 20, display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
+                                <div style={{ width: 36, height: 36, background: 'rgba(255,91,91,0.15)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <AlertCircle size={18} color="var(--danger)" />
                                 </div>
-                            </Card>
+                                <div>
+                                    <div style={{ fontFamily: 'Syne', fontWeight: 700, color: '#ff8a8a', fontSize: 14 }}>Processing Failed</div>
+                                    <div style={{ fontSize: 13, color: 'rgba(255,138,138,0.7)', marginTop: 2 }}>{error}</div>
+                                </div>
+                                <button onClick={() => setError(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><X size={16} /></button>
+                            </div>
                         )}
 
-                        {/* Results */}
-                        {imagePreview && !isProcessing && (
-                            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    {/* Original */}
-                                    <Card className="overflow-hidden flex flex-col group hover:border-slate-700 transition-colors duration-300">
-                                        <div className="p-5 border-b border-slate-800/50 bg-slate-900/40 flex items-center justify-between">
-                                            <h3 className="font-semibold text-slate-300 flex items-center gap-2">
-                                                <ImageIcon className="w-4 h-4 text-slate-500" />
-                                                Original
-                                            </h3>
+                        {/* Upload zone */}
+                        {!imagePreview && !isProcessing && (
+                            <div className="fade-up-1">
+                                <ImageUploader onImageSelect={handleImageSelect} />
+                                {/* Feature pills */}
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 32, flexWrap: 'wrap' }}>
+                                    {['PNG, JPG, WebP', 'No size limits', 'Transparent export', 'Custom background colors'].map(f => (
+                                        <div key={f} className="tag" style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--muted)', border: '1px solid var(--border)' }}>
+                                            <Check size={10} color="var(--success)" />{f}
                                         </div>
-                                        <div className="p-8 flex-1 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2nk5eamZAIK0onmDx38GqGjYdQ/3NgYGD4Lw58xZgYGJ68+fP//348eP//z58+//CAMRAf1w2l0OAAAAAElFTkSuQmCC')] bg-repeat min-h-[400px] flex items-center justify-center">
-                                            <img 
-                                                src={imagePreview} 
-                                                alt="Original" 
-                                                className="max-w-full h-auto rounded-2xl shadow-2xl"
-                                            />
-                                        </div>
-                                    </Card>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                                    {/* Processed */}
-                                    <Card className="overflow-hidden flex flex-col group relative border-indigo-500/30 shadow-indigo-500/5">
-                                        <div className="absolute top-0 right-0 p-5 z-20">
-                                            {processedCanvas && (
-                                                <DownloadButton canvas={processedCanvas} filename={fileName} bgColor={bgColor} />
-                                            )}
+                        {/* Processing */}
+                        {isProcessing && (
+                            <div className="fade-up" style={{ display: 'flex', justifyContent: 'center' }}>
+                                <div className="card" style={{ padding: 64, textAlign: 'center', width: '100%', maxWidth: 540 }}>
+                                    <div style={{ position: 'relative', width: 160, height: 160, margin: '0 auto 36px' }}>
+                                        <svg className="progress-ring" width="160" height="160">
+                                            <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+                                            <circle
+                                                cx="80" cy="80" r="68" fill="none"
+                                                stroke="url(#pg)" strokeWidth="8"
+                                                strokeLinecap="round"
+                                                strokeDasharray={`${2 * Math.PI * 68}`}
+                                                strokeDashoffset={`${2 * Math.PI * 68 * (1 - visualProgress / 100)}`}
+                                            />
+                                            <defs>
+                                                <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                    <stop offset="0%" stopColor="var(--accent)" />
+                                                    <stop offset="100%" stopColor="var(--accent2)" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                            <span style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 38, letterSpacing: '-0.04em' }}>{visualProgress}<span style={{ fontSize: 20, color: 'var(--muted)' }}>%</span></span>
                                         </div>
-                                        <div className="p-5 border-b border-slate-800/50 bg-slate-900/40 flex items-center justify-between">
-                                            <h3 className="font-semibold text-indigo-400 flex items-center gap-2">
-                                                <Sparkles className="w-4 h-4 text-indigo-500" />
-                                                Result
-                                            </h3>
+                                    </div>
+                                    <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 22, marginBottom: 10 }}>
+                                        {visualProgress === 100 ? 'Almost done...' : 'Removing background'}
+                                    </div>
+                                    <div style={{ color: 'var(--muted)', fontSize: 14 }}>AI is analyzing your image locally</div>
+                                    <div style={{ marginTop: 24, height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 99, overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: `${Math.max(visualProgress, 1)}%`, background: 'linear-gradient(90deg,var(--accent),var(--accent2))', borderRadius: 99, transition: 'width 0.12s ease' }} />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Result */}
+                        {imagePreview && !isProcessing && (
+                            <div className="fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                                {/* Toolbar */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>View:</span>
+                                        {[['split','Split'], ['single','Result only']].map(([v, l]) => (
+                                            <button key={v} onClick={() => setViewMode(v)} className="btn-ghost" style={{ padding: '7px 16px', fontSize: 12, color: viewMode === v ? 'var(--text)' : 'var(--muted)', background: viewMode === v ? 'rgba(255,255,255,0.08)' : 'transparent', border: `1px solid ${viewMode === v ? 'var(--border-hover)' : 'var(--border)'}` }}>
+                                                {l}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        {processedCanvas && <DownloadButton canvas={processedCanvas} filename={fileName} bgColor={bgColor} />}
+                                        <button className="btn-ghost" onClick={resetApp} style={{ padding: '11px 16px' }}>
+                                            <RefreshCw size={14} />
+                                            New Image
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Images */}
+                                <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'split' ? '1fr 1fr' : '1fr', gap: 20 }}>
+                                    {viewMode === 'split' && (
+                                        <div className="card" style={{ overflow: 'hidden' }}>
+                                            <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <ImageIcon size={14} color="var(--muted)" />
+                                                <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Original</span>
+                                            </div>
+                                            <div className="checker" style={{ padding: 24, minHeight: 380, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <img src={imagePreview} alt="Original" style={{ maxWidth: '100%', maxHeight: 500, borderRadius: 12, boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }} />
+                                            </div>
                                         </div>
-                                        
-                                        {/* Color Picker */}
-                                        <div className="px-6 py-5 flex items-center justify-center gap-3 flex-wrap border-b border-slate-800/50 bg-slate-900/40 z-10">
-                                            <span className="text-xs text-slate-500 uppercase font-bold tracking-widest w-full text-center mb-3">Background Color</span>
-                                            {colors.map((c) => (
+                                    )}
+
+                                    <div className="card" style={{ border: '1px solid rgba(176,96,255,0.2)', overflow: 'hidden' }}>
+                                        <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <Sparkles size={14} color="var(--accent)" />
+                                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 12, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Result</span>
+                                        </div>
+
+                                        {/* Color picker */}
+                                        <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                            <span style={{ fontSize: 11, fontFamily: 'Syne', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>BG:</span>
+                                            {colors.map(c => (
                                                 <button
                                                     key={c.val}
-                                                    onClick={() => setBgColor(c.val)}
                                                     title={c.name}
-                                                    className={`w-10 h-10 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center text-xs shadow-md
-                                                        ${bgColor === c.val 
-                                                            ? 'border-white ring-2 ring-indigo-500/50 scale-110' 
-                                                            : 'border-slate-600 hover:border-slate-400'}`}
-                                                    style={{ 
-                                                        backgroundColor: c.val === 'transparent' 
-                                                            ? 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 10px 10px' 
-                                                            : c.val 
-                                                    }}
+                                                    className={`swatch ${bgColor === c.val ? 'active' : ''}`}
+                                                    onClick={() => setBgColor(c.val)}
+                                                    style={{ background: c.bg || c.val, border: '2px solid rgba(255,255,255,0.1)' }}
                                                 >
-                                                    {bgColor === c.val && c.val !== 'transparent' && <Check className="w-4 h-4 text-white drop-shadow-md" />}
-                                                    {c.val === 'transparent' && bgColor === 'transparent' && <span className="text-slate-400 font-bold text-[10px]">/</span>}
+                                                    {bgColor === c.val && c.val !== 'transparent' && <Check size={14} color="white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }} />}
                                                 </button>
                                             ))}
                                         </div>
 
-                                        <div 
-                                            className="p-8 flex-1 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2nk5eamZAIK0onmDx38GqGjYdQ/3NgYGD4Lw58xZgYGJ68+fP//348eP//z58+//CAMRAf1w2l0OAAAAAElFTkSuQmCC')] bg-repeat min-h-[400px] flex items-center justify-center relative"
-                                            style={{ backgroundColor: bgColor }}
+                                        <div
+                                            className={bgColor === 'transparent' ? 'checker' : ''}
+                                            style={{ padding: 24, minHeight: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', background: bgColor !== 'transparent' ? bgColor : undefined }}
                                         >
                                             {processedCanvas ? (
-                                                <img 
-                                                    src={processedCanvas.toDataURL('image/png')} 
-                                                    alt="Processed" 
-                                                    className="max-w-full h-auto rounded-2xl shadow-2xl relative z-10"
-                                                />
+                                                <img src={processedCanvas.toDataURL('image/png')} alt="Result" style={{ maxWidth: '100%', maxHeight: 500, borderRadius: 12, boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }} />
                                             ) : (
-                                                <div className="text-center text-slate-500">
-                                                    <X className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                                    <p>Processing failed</p>
+                                                <div style={{ textAlign: 'center', color: 'var(--muted)' }}>
+                                                    <X size={40} style={{ marginBottom: 8, opacity: 0.4 }} />
+                                                    <p style={{ fontSize: 13 }}>Processing failed</p>
                                                 </div>
                                             )}
                                         </div>
-                                    </Card>
-                                </div>
-
-                                <div className="flex justify-center pt-4">
-                                    <Button onClick={resetApp} variant="outline" className="gap-2 px-10">
-                                        <RefreshCw className="w-4 h-4" />
-                                        Process Another Image
-                                    </Button>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Hidden Processor */}
+                        {/* Hidden processor */}
                         {imagePreview && isProcessing && (
-                            <ImageProcessor 
-                                imagePreview={imagePreview} 
-                                onComplete={handleProcessingComplete}
-                                onError={handleError}
-                                onProgress={setRealProgress}
-                            />
+                            <ImageProcessor imagePreview={imagePreview} onComplete={handleProcessingComplete} onError={handleError} onProgress={setRealProgress} />
                         )}
+                    </main>
+
+                    <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                        <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13, color: 'var(--muted)' }}>BG Remoover v2 — Open Source</span>
+                        <span style={{ fontSize: 12, color: 'rgba(107,101,128,0.6)' }}>Your images never leave your browser</span>
+                    </footer>
+                </div>
+            );
+        };
+
+        /* ─── Image Uploader ─── */
+        const ImageUploader = ({ onImageSelect }) => {
+            const [isDragging, setIsDragging] = useState(false);
+            const fileInputRef = useRef(null);
+
+            const handleDrag = (e) => {
+                e.preventDefault();
+                if (e.type === 'dragenter' || e.type === 'dragover') setIsDragging(true);
+                else setIsDragging(false);
+            };
+
+            const handleDrop = (e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                const f = e.dataTransfer.files[0];
+                if (f) processFile(f);
+            };
+
+            const processFile = (file) => {
+                if (!file.type.match('image.*')) { alert('Please select an image file'); return; }
+                const reader = new FileReader();
+                reader.onload = (e) => onImageSelect(file, e.target.result);
+                reader.readAsDataURL(file);
+            };
+
+            return (
+                <div
+                    className={`upload-zone ${isDragging ? 'dragging' : ''}`}
+                    style={{ padding: '80px 40px', textAlign: 'center' }}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current.click()}
+                >
+                    <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/png,image/jpeg,image/webp" onChange={e => e.target.files[0] && processFile(e.target.files[0])} />
+                    <div style={{ width: 80, height: 80, background: 'rgba(176,96,255,0.08)', border: '1px solid rgba(176,96,255,0.2)', borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px' }}>
+                        <Upload size={32} color="var(--accent)" strokeWidth={1.5} />
+                    </div>
+                    <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 28, letterSpacing: '-0.02em', marginBottom: 10 }}>
+                        Drop your image here
+                    </div>
+                    <div style={{ color: 'var(--muted)', marginBottom: 28, fontSize: 15 }}>or <span style={{ color: 'var(--accent)' }}>click to browse</span></div>
+                    <button className="btn-primary" onClick={e => { e.stopPropagation(); fileInputRef.current.click(); }}>
+                        <Upload size={16} />
+                        Choose Image
+                    </button>
+                </div>
+            );
+        };
+
+        /* ─── Image Processor ─── */
+        const ImageProcessor = ({ imagePreview, onComplete, onError, onProgress }) => {
+            useEffect(() => {
+                const run = async () => {
+                    try {
+                        const resp = await fetch(imagePreview);
+                        const blob = await resp.blob();
+
+                        const opts = {
+                            progress: (key, cur, tot) => {
+                                const pct = tot > 0 ? Math.round((cur / tot) * 100) : 0;
+                                onProgress(pct);
+                            },
+                            debug: false,
+                            proxyToWorker: true,
+                            model: 'medium',
+                        };
+
+                        let resultBlob;
+                        if (cachedRemoveBackground) {
+                            resultBlob = await cachedRemoveBackground(blob, opts);
+                        } else {
+                            isLibraryLoading = true;
+                            onProgress(1);
+                            const { removeBackground } = await import('https://esm.sh/@imgly/background-removal@1.4.5');
+                            cachedRemoveBackground = removeBackground;
+                            isLibraryLoading = false;
+                            resultBlob = await removeBackground(blob, opts);
+                        }
+
+                        const bitmap = await createImageBitmap(resultBlob);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = bitmap.width;
+                        canvas.height = bitmap.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(bitmap, 0, 0);
+                        onComplete(canvas);
+                    } catch (err) {
+                        onError('Failed to process image. ' + (err.message || ''));
+                    }
+                };
+                run();
+            }, []);
+            return null;
+        };
+
+        /* ─── Download Button ─── */
+        const DownloadButton = ({ canvas, filename, bgColor }) => {
+            const download = () => {
+                const tmp = document.createElement('canvas');
+                tmp.width = canvas.width;
+                tmp.height = canvas.height;
+                const ctx = tmp.getContext('2d');
+                if (bgColor !== 'transparent') {
+                    ctx.fillStyle = bgColor;
+                    ctx.fillRect(0, 0, tmp.width, tmp.height);
+                }
+                ctx.drawImage(canvas, 0, 0);
+                const a = document.createElement('a');
+                a.download = `${filename}-nobg.png`;
+                a.href = tmp.toDataURL('image/png');
+                a.click();
+            };
+            return (
+                <button className="btn-primary" onClick={download} style={{ fontSize: 13 }}>
+                    <Download size={15} />
+                    Download PNG
+                </button>
+            );
+        };
+
+        /* ══════════════════════════════════════════
+           ADMIN SHELL — Login gate
+        ══════════════════════════════════════════ */
+        const AdminShell = ({ navigate }) => {
+            const [authed, setAuthed] = useState(() => sessionStorage.getItem('bgrm_admin') === '1');
+
+            if (!authed) return <AdminLogin onAuth={() => { sessionStorage.setItem('bgrm_admin', '1'); setAuthed(true); }} navigate={navigate} />;
+            return <AdminPanel navigate={navigate} onLogout={() => { sessionStorage.removeItem('bgrm_admin'); setAuthed(false); }} />;
+        };
+
+        /* ─── Admin Login ─── */
+        const AdminLogin = ({ onAuth, navigate }) => {
+            const [pw, setPw] = useState('');
+            const [error, setError] = useState(false);
+            const [shaking, setShaking] = useState(false);
+
+            const submit = () => {
+                if (pw === 'Hundkatt') {
+                    onAuth();
+                } else {
+                    setError(true);
+                    setShaking(true);
+                    setTimeout(() => setShaking(false), 500);
+                }
+            };
+
+            return (
+                <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+                    <div className="ambient" style={{ width: 500, height: 500, background: 'radial-gradient(circle, rgba(176,96,255,0.07) 0%, transparent 70%)', top: '20%', left: '30%' }} />
+
+                    <div className="card fade-up" style={{ width: '100%', maxWidth: 400, padding: 48, position: 'relative' }}>
+                        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                            <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                                <Shield size={28} color="white" />
+                            </div>
+                            <h1 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 26, marginBottom: 8 }}>Admin Access</h1>
+                            <p style={{ color: 'var(--muted)', fontSize: 14 }}>BG Remoover Control Panel</p>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className={shaking ? 'shake' : ''}>
+                            <div>
+                                <label style={{ fontSize: 12, fontFamily: 'Syne', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Password</label>
+                                <input
+                                    className="input"
+                                    type="password"
+                                    value={pw}
+                                    onChange={e => { setPw(e.target.value); setError(false); }}
+                                    onKeyDown={e => e.key === 'Enter' && submit()}
+                                    placeholder="Enter admin password"
+                                    style={{ borderColor: error ? 'rgba(255,91,91,0.5)' : undefined }}
+                                    autoFocus
+                                />
+                                {error && <p style={{ fontSize: 12, color: 'var(--danger)', marginTop: 6 }}>Incorrect password. Try again.</p>}
+                            </div>
+                            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={submit}>
+                                <Lock size={15} />
+                                Sign In
+                            </button>
+                            <button className="btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: 13 }} onClick={() => navigate('/')}>
+                                ← Back to App
+                            </button>
+                        </div>
+                    </div>
+                    <style>{`.shake { animation: shake 0.4s ease; } @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(4px)} }`}</style>
+                </div>
+            );
+        };
+
+        /* ─── Admin Panel ─── */
+        const AdminPanel = ({ navigate, onLogout }) => {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const analytics = getAnalytics();
+            const uploads = (analytics.uploads || []).slice().reverse();
+            const total = analytics.total || 0;
+            const done = uploads.filter(u => u.status === 'done').length;
+            const errors = uploads.filter(u => u.status === 'error').length;
+            const avgSize = uploads.length ? Math.round(uploads.reduce((a, u) => a + (u.size || 0), 0) / uploads.length) : 0;
+
+            // Fake some extra data for a rich panel
+            const fakeLocations = ['Sweden', 'United States', 'Germany', 'Netherlands', 'United Kingdom', 'France'];
+            const fakeReferrers = ['Direct', 'Google', 'Twitter / X', 'GitHub', 'ProductHunt'];
+
+            const tabs = [
+                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                { id: 'uploads', label: 'Upload Log', icon: Image },
+                { id: 'settings', label: 'Settings', icon: Settings },
+            ];
+
+            return (
+                <div style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '240px 1fr', gridTemplateRows: 'auto 1fr' }}>
+                    {/* Top bar */}
+                    <div style={{ gridColumn: '1/-1', borderBottom: '1px solid var(--border)', padding: '16px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Sparkles size={15} color="white" />
+                            </div>
+                            <span style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 16 }}>BG Remoover</span>
+                            <ChevronRight size={14} color="var(--muted)" />
+                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 14, color: 'var(--muted)' }}>Admin</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <button className="btn-ghost" style={{ fontSize: 12, padding: '8px 14px' }} onClick={() => navigate('/')}>
+                                <Eye size={13} /> View Site
+                            </button>
+                            <button className="btn-ghost" style={{ fontSize: 12, padding: '8px 14px', color: 'var(--danger)' }} onClick={onLogout}>
+                                <LogOut size={13} /> Logout
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Sidebar */}
+                    <div style={{ borderRight: '1px solid var(--border)', padding: '24px 16px', background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ padding: '8px 16px', marginBottom: 8 }}>
+                            <span style={{ fontSize: 10, fontFamily: 'Syne', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Menu</span>
+                        </div>
+                        {tabs.map(t => (
+                            <div key={t.id} className={`nav-item ${activeTab === t.id ? 'active' : ''}`} onClick={() => setActiveTab(t.id)}>
+                                <t.icon size={16} />
+                                {t.label}
+                            </div>
+                        ))}
+                        <div style={{ flex: 1 }} />
+                        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+                            <div style={{ padding: '10px 16px', fontSize: 12, color: 'var(--muted)' }}>
+                                <div style={{ fontFamily: 'Syne', fontWeight: 700, marginBottom: 2 }}>Admin Session</div>
+                                <div style={{ opacity: 0.6 }}>Active since page load</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main content */}
+                    <div style={{ padding: 32, overflowY: 'auto' }}>
+                        {activeTab === 'dashboard' && <DashboardTab total={total} done={done} errors={errors} avgSize={avgSize} uploads={uploads} fakeLocations={fakeLocations} fakeReferrers={fakeReferrers} />}
+                        {activeTab === 'uploads' && <UploadsTab uploads={uploads} />}
+                        {activeTab === 'settings' && <SettingsTab />}
                     </div>
                 </div>
             );
         };
 
+        /* ─── Dashboard Tab ─── */
+        const DashboardTab = ({ total, done, errors, avgSize, uploads, fakeLocations, fakeReferrers }) => {
+            const successRate = total > 0 ? Math.round((done / total) * 100) : 0;
+
+            const stats = [
+                { label: 'Total Processed', value: total, icon: Activity, color: 'var(--accent)', suffix: '' },
+                { label: 'Successful', value: done, icon: Check, color: 'var(--success)', suffix: '' },
+                { label: 'Success Rate', value: successRate, icon: TrendingUp, color: 'var(--accent2)', suffix: '%' },
+                { label: 'Avg File Size', value: avgSize, icon: BarChart2, color: '#f97316', suffix: 'KB' },
+            ];
+
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                    <div>
+                        <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 24, marginBottom: 4 }}>Dashboard</h2>
+                        <p style={{ color: 'var(--muted)', fontSize: 14 }}>Overview of your BG Remoover usage</p>
+                    </div>
+
+                    {/* Stats grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16 }}>
+                        {stats.map((s, i) => (
+                            <div key={i} className="admin-stat-card fade-up" style={{ animationDelay: `${i * 0.07}s` }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                                    <span style={{ fontSize: 12, fontFamily: 'Syne', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.label}</span>
+                                    <div style={{ width: 32, height: 32, background: `${s.color}15`, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <s.icon size={15} color={s.color} />
+                                    </div>
+                                </div>
+                                <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 32, letterSpacing: '-0.03em' }}>
+                                    {s.value}<span style={{ fontSize: 16, color: 'var(--muted)', fontWeight: 600 }}>{s.suffix}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                        {/* Recent uploads */}
+                        <div className="card">
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <Clock size={14} color="var(--muted)" />
+                                <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13 }}>Recent Activity</span>
+                            </div>
+                            <div style={{ padding: 8 }}>
+                                {uploads.slice(0, 6).length === 0 && (
+                                    <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No activity yet. Process an image first.</div>
+                                )}
+                                {uploads.slice(0, 6).map((u, i) => (
+                                    <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, transition: 'background 0.15s' }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                        <div style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.04)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                            <ImageIcon size={14} color="var(--muted)" />
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
+                                            <div style={{ fontSize: 11, color: 'var(--muted)' }}>{u.size} KB · {new Date(u.time).toLocaleTimeString()}</div>
+                                        </div>
+                                        <span className="dot" style={{ background: u.status === 'done' ? 'var(--success)' : u.status === 'error' ? 'var(--danger)' : 'var(--accent)' }} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Top countries */}
+                        <div className="card">
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <Globe size={14} color="var(--muted)" />
+                                <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13 }}>Top Locations</span>
+                                <span className="tag" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--muted)', fontSize: 10, marginLeft: 'auto' }}>Demo data</span>
+                            </div>
+                            <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                {fakeLocations.map((loc, i) => {
+                                    const pct = Math.max(15, 80 - i * 12);
+                                    return (
+                                        <div key={loc}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                                                <span style={{ fontSize: 13 }}>{loc}</span>
+                                                <span style={{ fontSize: 12, color: 'var(--muted)' }}>{pct}%</span>
+                                            </div>
+                                            <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 99, overflow: 'hidden' }}>
+                                                <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg,var(--accent),var(--accent2))`, borderRadius: 99 }} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Referrers */}
+                    <div className="card">
+                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <TrendingUp size={14} color="var(--muted)" />
+                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 13 }}>Traffic Sources</span>
+                            <span className="tag" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--muted)', fontSize: 10, marginLeft: 'auto' }}>Demo data</span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 0 }}>
+                            {fakeReferrers.map((ref, i) => {
+                                const pct = [42, 28, 15, 9, 6][i];
+                                return (
+                                    <div key={ref} style={{ padding: '20px', textAlign: 'center', borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
+                                        <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 28, letterSpacing: '-0.03em', marginBottom: 4 }}>{pct}%</div>
+                                        <div style={{ fontSize: 12, color: 'var(--muted)' }}>{ref}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        /* ─── Uploads Tab ─── */
+        const UploadsTab = ({ uploads }) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <div>
+                    <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 24, marginBottom: 4 }}>Upload Log</h2>
+                    <p style={{ color: 'var(--muted)', fontSize: 14 }}>All image processing events from this browser</p>
+                </div>
+                <div className="card">
+                    {uploads.length === 0 ? (
+                        <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>
+                            <ImageIcon size={40} style={{ margin: '0 auto 16px', opacity: 0.3, display: 'block' }} />
+                            <p style={{ fontSize: 14 }}>No uploads recorded yet.</p>
+                            <p style={{ fontSize: 12, marginTop: 4, opacity: 0.6 }}>Process an image to see it here.</p>
+                        </div>
+                    ) : (
+                        <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr>
+                                    <th>File</th>
+                                    <th>Size</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {uploads.map(u => (
+                                    <tr key={u.id}>
+                                        <td>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                <div style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.04)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <ImageIcon size={14} color="var(--muted)" />
+                                                </div>
+                                                <span style={{ fontSize: 13, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</span>
+                                            </div>
+                                        </td>
+                                        <td style={{ color: 'var(--muted)', fontSize: 13 }}>{u.size} KB</td>
+                                        <td style={{ color: 'var(--muted)', fontSize: 13 }}>{new Date(u.time).toLocaleString()}</td>
+                                        <td>
+                                            <span className="tag" style={{
+                                                background: u.status === 'done' ? 'rgba(52,209,138,0.1)' : u.status === 'error' ? 'rgba(255,91,91,0.1)' : 'rgba(176,96,255,0.1)',
+                                                color: u.status === 'done' ? 'var(--success)' : u.status === 'error' ? 'var(--danger)' : 'var(--accent)'
+                                            }}>
+                                                <span className="dot" style={{ background: u.status === 'done' ? 'var(--success)' : u.status === 'error' ? 'var(--danger)' : 'var(--accent)', width: 6, height: 6 }} />
+                                                {u.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </div>
+        );
+
+        /* ─── Settings Tab ─── */
+        const SettingsTab = () => {
+            const [cleared, setCleared] = useState(false);
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 560 }}>
+                    <div>
+                        <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 24, marginBottom: 4 }}>Settings</h2>
+                        <p style={{ color: 'var(--muted)', fontSize: 14 }}>Manage admin preferences and data</p>
+                    </div>
+
+                    <div className="card" style={{ overflow: 'visible' }}>
+                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 14 }}>Analytics Data</span>
+                        </div>
+                        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6 }}>
+                                All analytics are stored locally in your browser's localStorage. No data is sent to any server.
+                            </p>
+                            <button
+                                className="btn-ghost"
+                                style={{ alignSelf: 'flex-start', color: cleared ? 'var(--success)' : 'var(--danger)', borderColor: cleared ? 'rgba(52,209,138,0.3)' : 'rgba(255,91,91,0.3)' }}
+                                onClick={() => { localStorage.removeItem('bgrm_analytics'); setCleared(true); setTimeout(() => setCleared(false), 2000); }}
+                            >
+                                {cleared ? <><Check size={14} />Cleared!</> : <><X size={14} />Clear All Data</>}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                            <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 14 }}>About</span>
+                        </div>
+                        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {[['Version', 'v2.0.0'], ['AI Model', '@imgly/background-removal 1.4.5'], ['Processing', '100% Client-side'], ['Admin Path', '/admin']].map(([k, v]) => (
+                                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <span style={{ fontSize: 13, color: 'var(--muted)' }}>{k}</span>
+                                    <span style={{ fontSize: 13, fontFamily: 'Syne', fontWeight: 600 }}>{v}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        /* ─── Mount ─── */
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
