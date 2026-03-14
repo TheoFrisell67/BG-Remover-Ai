@@ -251,11 +251,12 @@
                             console.log("Using cached AI model (Fast!)");
                             const resultBlob = await cachedRemoveBackground(blob, {
                                 progress: (key, current, total) => {
-                                    const percent = Math.round((current / total) * 100);
+                                    // Safe math to prevent NaN/Infinity glitches
+                                    const percent = total > 0 ? Math.round((current / total) * 100) : 0;
                                     onProgress(percent);
                                 },
                                 debug: false,
-                                proxyToWorker: false,
+                                proxyToWorker: true, // TRUE: Runs in background thread (UI won't freeze)
                                 model: 'medium',
                             });
                             finishProcessing(resultBlob);
@@ -264,7 +265,7 @@
 
                         if (!isLibraryLoading) {
                             isLibraryLoading = true;
-                            onProgress(1); 
+                            onProgress(1); // Start at 1% immediately to show activity
 
                             const moduleUrl = `https://esm.sh/@imgly/background-removal@1.4.5`;
                             const { removeBackground } = await import(moduleUrl);
@@ -276,11 +277,11 @@
                             
                             const resultBlob = await removeBackground(blob, {
                                 progress: (key, current, total) => {
-                                    const percent = Math.round((current / total) * 100);
+                                    const percent = total > 0 ? Math.round((current / total) * 100) : 0;
                                     onProgress(percent);
                                 },
                                 debug: false,
-                                proxyToWorker: false,
+                                proxyToWorker: true, // TRUE: Runs in background thread
                                 model: 'medium',
                             });
                             finishProcessing(resultBlob);
@@ -405,8 +406,6 @@
                         
                         {/* Header */}
                         <header className="text-center space-y-6 animate-in fade-in slide-in-from-top-4 duration-700">
-                            {/* LOGO REMOVED AS REQUESTED */}
-                            
                             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-gradient-x">BG</span> Remover
                             </h1>
@@ -468,10 +467,11 @@
                                                     ? "Downloading high-precision neural network (first time only)..." 
                                                     : "Analyzing pixels and removing background...")}
                                         </p>
+                                        {/* Progress Bar with faster transition (75ms) */}
                                         <div className="w-full bg-slate-800 rounded-full h-3 mt-6 overflow-hidden shadow-inner">
                                             <div 
-                                                className="bg-gradient-to-r from-indigo-600 to-purple-600 h-3 rounded-full transition-all duration-300 ease-out shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
-                                                style={{ width: `${Math.max(progress, 5)}%` }}
+                                                className="bg-gradient-to-r from-indigo-600 to-purple-600 h-3 rounded-full transition-all duration-75 ease-out shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
+                                                style={{ width: `${Math.max(progress, 1)}%` }}
                                             ></div>
                                         </div>
                                     </div>
